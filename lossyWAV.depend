@@ -1,0 +1,459 @@
+# depslib dependency file v1.0
+1363092734 source:e:\userdata\cpp\lossywav\lossywav.cpp
+	"units/nCore.h"
+	"units/fftw_interface.h"
+	"units/nFFT.h"
+	"units/nFillFFT.h"
+	"units/nFloat16.h"
+	"units/nInitialise.h"
+	"units/nMaths.h"
+	"units/nOutput.h"
+	"units/nProcess.h"
+	"units/nParameter.h"
+	"units/nRandom.h"
+	"units/nRemoveBits.h"
+	"units/nSGNS.h"
+	"units/nShiftBlocks.h"
+	"units/nSpreading.h"
+	"units/nWav.h"
+	"units/nNoiseCalc.h"
+	"units/nMasking.h"
+
+1364243192 e:\userdata\cpp\lossywav\units\ncore.h
+	<windows.h>
+	<cmath>
+	<string>
+	"..\version.h"
+	"nSupport.h"
+	"nComplex.h"
+	<stdint.h>
+
+1358323364 e:\userdata\cpp\lossywav\units\nsupport.h
+	<ctime>
+	<sstream>
+	<iomanip>
+	<iostream>
+	<fstream>
+
+1361527640 e:\userdata\cpp\lossywav\units\ninitialise.h
+
+1361528034 e:\userdata\cpp\lossywav\units\nwav.h
+
+1361528034 e:\userdata\cpp\lossywav\units\nshiftblocks.h
+
+1361527796 e:\userdata\cpp\lossywav\units\nprocess.h
+
+1361527795 e:\userdata\cpp\lossywav\units\nparameter.h
+	<string>
+
+1362728649 e:\userdata\cpp\lossywav\units\nspreading.h
+
+1361527896 e:\userdata\cpp\lossywav\units\fftw_interface.h
+	"nCore.h"
+
+1358323362 e:\userdata\cpp\lossywav\units\nfft.h
+	"nCore.h"
+
+1361526722 e:\userdata\cpp\lossywav\units\nfillfft.h
+
+1362062704 e:\userdata\cpp\lossywav\units\nmaths.h
+	<cmath>
+	"nCore.h"
+
+1363337310 e:\userdata\cpp\lossywav\units\nsgns.h
+	<algorithm>
+	<cmath>
+	<cstring>
+	"nCore.h"
+	"nMaths.h"
+	"fftw_interface.h"
+	"nFFT.h"
+	"nMasking.h"
+
+1361528034 e:\userdata\cpp\lossywav\units\noutput.h
+
+1355493324 source:e:\userdata\cpp\lossywav\units\fftw_interface.cpp
+	"FFTW_interface.h"
+
+1361530595 source:e:\userdata\cpp\lossywav\units\ncore.cpp
+	<sstream>
+	<iomanip>
+	<iostream>
+	<cmath>
+	<ctime>
+	"nCore.h"
+	"nMaths.h"
+
+1361519468 source:e:\userdata\cpp\lossywav\units\nfft.cpp
+	"math.h"
+	"nMaths.h"
+	"nFFT.h"
+	"nCore.h"
+
+1347021240 e:\userdata\cpp\lossywav\units\nfft_pas.h
+
+1361519468 source:e:\userdata\cpp\lossywav\units\nfillfft.cpp
+	"nCore.h"
+	"nMaths.h"
+	"nFFT.h"
+	"nFloat16.h"
+	"nFillFFT.h"
+
+1364242796 source:e:\userdata\cpp\lossywav\units\ninitialise.cpp
+	"math.h"
+	"nCore.h"
+	"nSpreading.h"
+	"nParameter.h"
+	"nInitialise.h"
+	"nSGNS.h"
+	"nOutput.h"
+	"nProcess.h"
+	"nFillFFT.h"
+	"nRemoveBits.h"
+
+1364208570 e:\userdata\cpp\lossywav\units\nremovebits.h
+	"nCore.h"
+
+1360309314 source:e:\userdata\cpp\lossywav\units\nmaths.cpp
+	<cmath>
+	"nMaths.h"
+	"nRandom.h"
+
+1363592918 source:e:\userdata\cpp\lossywav\units\noutput.cpp
+	<iostream>
+	<cmath>
+	<intrin.h>
+	"nOutput.h"
+	"nCore.h"
+	"nMaths.h"
+	"nSpreading.h"
+	"fftw_interface.h"
+	"nSGNS.h"
+	"nParameter.h"
+
+1364333408 source:e:\userdata\cpp\lossywav\units\nparameter.cpp
+	<cstdlib>
+	"nCore.h"
+	"nParameter.h"
+	"nMaths.h"
+	"nOutput.h"
+
+1364242750 source:e:\userdata\cpp\lossywav\units\nprocess.cpp
+	"nProcess.h"
+	"nCore.h"
+	"nSGNS.h"
+	"nMaths.h"
+	"nSpreading.h"
+	"fftw_interface.h"
+	"nFFT.h"
+	"nFillFFT.h"
+	"nRemoveBits.h"
+	"nOutput.h"
+
+1364313703 source:e:\userdata\cpp\lossywav\units\nremovebits.cpp
+	"nFloat16.h"
+	"nMaths.h"
+	"nRemoveBits.h"
+	"nSGNS.h"
+
+1364243192 source:e:\userdata\cpp\lossywav\units\nsgns.cpp
+	"nCore.h"
+	"nFillFFT.h"
+	"nSGNS.h"
+
+1360234962 source:e:\userdata\cpp\lossywav\units\nshiftblocks.cpp
+	"nShiftBlocks.h"
+	"nCore.h"
+	"nMaths.h"
+
+1364242750 source:e:\userdata\cpp\lossywav\units\nspreading.cpp
+	<cmath>
+	"nCore.h"
+	"nMaths.h"
+	"nSpreading.h"
+	"nMasking.h"
+
+1361519468 source:e:\userdata\cpp\lossywav\units\nwav.cpp
+	<fcntl.h>
+	<iostream>
+	<cstring>
+	<cstdlib>
+	<ctime>
+	"nWav.h"
+	"nCore.h"
+	"nParameter.h"
+	"nMaths.h"
+
+1351844626 source:e:\userdata\cpp\lossywav\units\nfft_debug.cpp
+	"windows.h"
+	"nCore.h"
+	"nMaths.h"
+	"fftw_interface.h"
+	"nFFT.h"
+	"nRandom.h"
+	"pthread.h"
+
+1348861440 e:\userdata\cpp\lossywav\units\nfft_debug.h
+
+1360224170 source:e:\userdata\cpp\lossywav\units\nrandom.cpp
+	"nMaths.h"
+	"nRandom.h"
+
+1360225146 e:\userdata\cpp\lossywav\units\nrandom.h
+	"nCore.h"
+
+1361527796 e:\userdata\cpp\lossywav\units\ncomplex.h
+
+1364242957 e:\userdata\cpp\lossywav\version.h
+
+1355493324 e:\userdata\cpp\lossywav\units\nversion.h
+
+1360744980 source:e:\userdata\cpp\lossywav\lossywav.rc
+
+1364333581 source:e:\userdata\cpp\lossywav\units\nnoisecalc.cpp
+	"windows.h"
+	"nCore.h"
+	"nMaths.h"
+	"fftw_interface.h"
+	"nFFT.h"
+	"nFillFFT.h"
+	"nFloat16.h"
+	"nRandom.h"
+	"pthread.h"
+
+1361527796 e:\userdata\cpp\lossywav\units\nnoisecalc.h
+
+1361527796 e:\userdata\cpp\lossywav\units\nfloat16.h
+	"nCore.h"
+
+1353922402 e:\userdata\cpp\lossywav\units\nieee_float.h
+
+1360224712 source:e:\userdata\cpp\lossywav\units\nfloat16.cpp
+	"nFloat16.h"
+
+1362381840 source:e:\userdata\cpp\lossywav\units\nmasking.cpp
+	"nMasking.h"
+	"nMaths.h"
+
+1362382348 e:\userdata\cpp\lossywav\units\nmasking.h
+
+1412257207 source:e:\userdata\code\cpp\lossywav\lossywav.cpp
+	"units/nCore.h"
+	"units/fftw_interface.h"
+	"units/nFFT.h"
+	"units/nFillFFT.h"
+	"units/nInitialise.h"
+	"units/nMaths.h"
+	"units/nOutput.h"
+	"units/nProcess.h"
+	"units/nParameter.h"
+	"units/nRemoveBits.h"
+	"units/nSGNS.h"
+	"units/nShiftBlocks.h"
+	"units/nSpreading.h"
+	"units/nWav.h"
+
+1412180013 e:\userdata\code\cpp\lossywav\units\ncore.h
+	<windows.h>
+	<cmath>
+	<string>
+	"..\version.h"
+	"nSupport.h"
+	"nComplex.h"
+	<stdint.h>
+
+1411138298 e:\userdata\code\cpp\lossywav\version.h
+
+1371627868 e:\userdata\code\cpp\lossywav\units\nsupport.h
+	<ctime>
+	<sstream>
+	<iomanip>
+	<iostream>
+	<fstream>
+
+1384159571 e:\userdata\code\cpp\lossywav\units\ncomplex.h
+
+1412259659 e:\userdata\code\cpp\lossywav\units\fftw_interface.h
+	"nCore.h"
+
+1383642828 e:\userdata\code\cpp\lossywav\units\nfft.h
+	"nCore.h"
+
+1383836293 e:\userdata\code\cpp\lossywav\units\nfillfft.h
+
+1382088071 e:\userdata\code\cpp\lossywav\units\nfloat16.h
+	"nCore.h"
+
+1380622597 e:\userdata\code\cpp\lossywav\units\ninitialise.h
+
+1411391908 e:\userdata\code\cpp\lossywav\units\nmaths.h
+	<cmath>
+	<stdlib.h>
+	"nCore.h"
+
+1371627868 e:\userdata\code\cpp\lossywav\units\noutput.h
+
+1380623064 e:\userdata\code\cpp\lossywav\units\nprocess.h
+	"nCore.h"
+
+1391211391 e:\userdata\code\cpp\lossywav\units\nparameter.h
+
+1371624268 e:\userdata\code\cpp\lossywav\units\nrandom.h
+	"nCore.h"
+
+1383836262 e:\userdata\code\cpp\lossywav\units\nremovebits.h
+	"nCore.h"
+	"nMaths.h"
+	"nSGNS.h"
+
+1412257490 e:\userdata\code\cpp\lossywav\units\nsgns.h
+	<algorithm>
+	<cmath>
+	<cstring>
+	"nCore.h"
+	"nMaths.h"
+	"fftw_interface.h"
+	"nFillFFT.h"
+	"nFFT.h"
+
+1371627202 e:\userdata\code\cpp\lossywav\units\nmasking.h
+	"nCore.h"
+
+1361531636 e:\userdata\code\cpp\lossywav\units\nshiftblocks.h
+
+1412257348 e:\userdata\code\cpp\lossywav\units\nspreading.h
+	"nCore.h"
+
+1361531636 e:\userdata\code\cpp\lossywav\units\nwav.h
+
+1361531398 e:\userdata\code\cpp\lossywav\units\nnoisecalc.h
+
+1411138231 source:e:\userdata\code\cpp\lossywav\lossywav.rc
+
+1391211392 source:e:\userdata\code\cpp\lossywav\units\fftw_interface.cpp
+	"FFTW_interface.h"
+
+1411391548 source:e:\userdata\code\cpp\lossywav\units\ncore.cpp
+	<sstream>
+	<iomanip>
+	<iostream>
+	<cmath>
+	<ctime>
+	"nCore.h"
+	"nMaths.h"
+
+1384184855 source:e:\userdata\code\cpp\lossywav\units\nfft.cpp
+	"math.h"
+	"nMaths.h"
+	"nFFT.h"
+	"nCore.h"
+
+1411391548 source:e:\userdata\code\cpp\lossywav\units\nfillfft.cpp
+	"nCore.h"
+	"nMaths.h"
+	"nFFT.h"
+	"nFillFFT.h"
+
+1382088071 source:e:\userdata\code\cpp\lossywav\units\nfloat16.cpp
+	"nFloat16.h"
+
+1371627868 source:e:\userdata\code\cpp\lossywav\units\nmasking.cpp
+	"nMasking.h"
+	"nMaths.h"
+
+1383836341 source:e:\userdata\code\cpp\lossywav\units\nmaths.cpp
+	"nMaths.h"
+
+1411138313 source:e:\userdata\code\cpp\lossywav\units\noutput.cpp
+	<iostream>
+	<cmath>
+	<intrin.h>
+	"nOutput.h"
+	"nCore.h"
+	"nMaths.h"
+	"nSpreading.h"
+	"fftw_interface.h"
+	"nSGNS.h"
+	"nParameter.h"
+
+1412257972 source:e:\userdata\code\cpp\lossywav\units\nparameter.cpp
+	<cstdlib>
+	"nCore.h"
+	<string>
+	"nParameter.h"
+	"nMaths.h"
+	"nOutput.h"
+
+1412257589 source:e:\userdata\code\cpp\lossywav\units\nprocess.cpp
+	"nSGNS.h"
+	"nMaths.h"
+	"nSpreading.h"
+	"fftw_interface.h"
+	"nFFT.h"
+	"nFillFFT.h"
+	"nRemoveBits.h"
+	"nOutput.h"
+	"nProcess.h"
+
+1371623566 source:e:\userdata\code\cpp\lossywav\units\nrandom.cpp
+	"nMaths.h"
+	"nRandom.h"
+
+1412257972 source:e:\userdata\code\cpp\lossywav\units\nsgns.cpp
+	"nSGNS.h"
+
+1385542639 source:e:\userdata\code\cpp\lossywav\units\nshiftblocks.cpp
+	"nShiftBlocks.h"
+	"nCore.h"
+	"nMaths.h"
+
+1412257972 source:e:\userdata\code\cpp\lossywav\units\nspreading.cpp
+	<cmath>
+	"nMaths.h"
+	"nSpreading.h"
+
+1389003746 source:e:\userdata\code\cpp\lossywav\units\nwav.cpp
+	<fcntl.h>
+	<iostream>
+	<cstring>
+	<cstdlib>
+	<ctime>
+	"nWav.h"
+	"nCore.h"
+	"nParameter.h"
+	"nMaths.h"
+	"nOutput.h"
+
+1412180043 source:e:\userdata\code\cpp\lossywav\units\ninitialise.cpp
+	"math.h"
+	"nCore.h"
+	"nSpreading.h"
+	"nParameter.h"
+	"nInitialise.h"
+	"nSGNS.h"
+	"nFillFFT.h"
+
+1370847477 source:e:\userdata\code\cpp\lossywav\units\nnoisecalc.cpp
+	"windows.h"
+	"nCore.h"
+	"nMaths.h"
+	"fftw_interface.h"
+	"nFFT.h"
+	"nFillFFT.h"
+	"nFloat16.h"
+	"nRandom.h"
+	"pthread.h"
+
+1389019223 source:e:\userdata\code\cpp\lossywav\units\nremovebits.cpp
+	"nRemoveBits.h"
+
+1366489638 source:e:\userdata\code\cpp\lossywav\units\ng711.c
+	"nG711.h"
+
+1371624268 e:\userdata\code\cpp\lossywav\units\ng711.h
+	"nCore.h"
+
+1382087147 source:e:\userdata\code\cpp\lossywav\units\ng711.cpp
+	"nG711.h"
+	"nCore.h"
+
