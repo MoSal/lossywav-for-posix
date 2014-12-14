@@ -39,6 +39,17 @@
 #include "nMaths.h"
 #include "nOutput.h"
 
+#include <ctime>
+
+int Sleep(double interval)
+{
+    struct timespec tm;
+    interval /= 1000.0;
+    tm.tv_sec = (time_t)interval;
+    tm.tv_nsec = (interval - tm.tv_sec)*1000*1000*1000;
+    return nanosleep(&tm, NULL);
+}
+
 namespace {
 
 static const uint64_t MAX_uint64_t = 0xFFFFFFFFFFFFFFFFull;
