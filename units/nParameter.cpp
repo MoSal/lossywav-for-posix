@@ -924,11 +924,17 @@ bool check_parameter()
         }
 
         parameters.WavOutDir = current_parameter;
-
+#ifdef _WIN32
         if (!((parameters.WavOutDir[parameters.WavOutDir.length()] == '\\') || (parameters.WavOutDir[parameters.WavOutDir.length()] == ':')))
         {
             parameters.WavOutDir = parameters.WavOutDir + '\\';
         }
+#else
+        if (parameters.WavOutDir[parameters.WavOutDir.length()] != '/')
+        {
+            parameters.WavOutDir = parameters.WavOutDir + '/';
+        }
+#endif
 
         return true;
     }

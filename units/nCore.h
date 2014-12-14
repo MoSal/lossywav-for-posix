@@ -32,7 +32,13 @@
 #include <windows.h> // For now...
 #include <cmath>
 #include <string>
+
+#ifdef _WIN32
 #include "..\version.h"
+#else
+#include "../version.h"
+#endif
+
 #include "nSupport.h"
 #include "nComplex.h"
 
