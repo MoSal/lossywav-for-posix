@@ -46,21 +46,21 @@ fftw: prep-fftw $(OBJS) link
 fftw-optimized: prep-fftw-optimized $(OBJS) link
 
 prep:
-	$(eval CXXFLAGS = ${COMMON_CXXFLAGS} ${CXXFLAGS})
-	$(eval LDFLAGS = ${COMMON_LDFLAGS} ${LDFLAGS})
-	$(eval LIBS = ${COMMON_LIBS} ${LIBS})
+	$(eval override CXXFLAGS = ${COMMON_CXXFLAGS} ${CXXFLAGS})
+	$(eval override LDFLAGS = ${COMMON_LDFLAGS} ${LDFLAGS})
+	$(eval override LIBS = ${COMMON_LIBS} ${LIBS})
 
 prep-optimized: prep
-	$(eval CXXFLAGS += ${OPTIMIZED_CXXFLAGS} ${LTO_FLAGS})
-	$(eval LDFLAGS += ${LTO_FLAGS})
+	$(eval override CXXFLAGS += ${OPTIMIZED_CXXFLAGS} ${LTO_FLAGS})
+	$(eval override LDFLAGS += ${LTO_FLAGS})
 
 prep-fftw: prep
-	$(eval CXXFLAGS += -DENABLE_FFTW)
-	$(eval LIBS += -lfftw3)
+	$(eval override CXXFLAGS += -DENABLE_FFTW)
+	$(eval override LIBS += -lfftw3)
 
 prep-fftw-optimized: prep-optimized
-	$(eval CXXFLAGS += -DENABLE_FFTW)
-	$(eval LIBS += -lfftw3)
+	$(eval override CXXFLAGS += -DENABLE_FFTW)
+	$(eval override LIBS += -lfftw3)
 
 *.o: ${@:.o=.cpp} $(HEADERS)
 	${CXX} -c ${@:.o=.cpp} -o ${@} ${CXXFLAGS}
