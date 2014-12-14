@@ -1,6 +1,6 @@
 # Note
-This is the *README* of lossyWAV for Posix.
-The *README* of lossyWAV (proper) was moved to  *README.lossyWAV.md*.
+This is the **README** of lossyWAV for Posix.
+The README of lossyWAV (proper) was moved to  `README.lossyWAV.md`.
 
 # lossyWAV for POSIX
 
@@ -19,20 +19,20 @@ defined. Someone experienced in build systems can make a lot of improvements
 here.
 
 # How to Install
-A simple *Makefile* is offered. Besides the default(*all*) target,
+A simple `Makefile` is offered. Besides the default(*all*) target,
 The following targets are available:
 
-* *optimized*: Add optimization flags as follows:
-
+* **optimized**: Add optimization flags as follows:
   * *CXXFLAGS*:  -march=native -Ofast -flto
   * *LDFLAGS*:  -flto
 
-* *fftw*: Enable libfftw3. Needs libfftw3 header and library.
-* *fftw-optimized*: *fftw* + *optimized*
+* **fftw**: Enable libfftw3. Needs libfftw3 header and library.
 
-Passed *CXXFLAGS* and *LDFLAGS* (from shell or make) will be appended.
+* **fftw-optimized**: *fftw* + *optimized*
 
-No *install* target is provided. You would only need one file(*lossywav*)
+Passed **CXXFLAGS** and **LDFLAGS** (from shell or make) will be appended.
+
+No **install** target is provided. You would only need one file(`lossywav`)
 anyway.
 
 # Warning
