@@ -19,7 +19,7 @@
 //    by Tyge Løvset (tycho), Aug. 2012
 // --------------------------------------------------------------
 
-#include "FFTW_interface.h"
+#include "fftw_interface.h"
 
 static HMODULE FFTW_DLL_Handle = nullptr;
 static bool FFTW_DLL_Loaded = false;
