@@ -33,6 +33,10 @@
 #include <iostream>
 #include <fstream>
 
+#ifndef _WIN32
+#include <sys/stat.h> // stat()
+#endif
+
 // DELPHI EMULATION
 
 template <typename T, int32_t Low, int32_t High> struct range_array
@@ -66,6 +70,7 @@ inline std::string floattostrf(double number, int32_t digits)
     return ss.str();
 }
 
+#ifdef _WIN32
 
 inline bool FileIsReadOnly(const std::string& fileName_in)
 {
@@ -88,6 +93,29 @@ inline bool DirectoryExists(const std::string& dirName_in)
     return false;    // this is not a directory! } {
 }
 
+#else
+
+inline bool FileIsReadOnly(const std::string& fileName_in)
+{
+    std::ifstream ifs;
+    ifs.open(fileName_in.c_str(), std::ifstream::out | std::ios_base::binary);
+    if (ifs.rdstate() & std::ifstream::failbit) {
+        return true;
+    }
+    ifs.close();
+    return false;
+}
+
+inline bool DirectoryExists(const std::string& dirName_in)
+{
+    struct stat st;
+    if ( stat(dirName_in.c_str(), &st) ) {
+        return false;
+    }
+    return S_ISDIR(st.st_mode);
+}
+
+#endif
 
 inline bool FileExists(std::string file_name)
 {
