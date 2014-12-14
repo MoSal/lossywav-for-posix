@@ -38,7 +38,7 @@
 #include <cmath>
 #include <string>
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
 #include "..\version.h"
 #else
 #include "../version.h"
