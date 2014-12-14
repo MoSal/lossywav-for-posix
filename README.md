@@ -1,5 +1,5 @@
 # Note
-This is the **README** of lossyWAV for Posix.
+This is the `README` of **lossyWAV for POSIX**.
 The README of lossyWAV (proper) was moved to  `README.lossyWAV.md`.
 
 # lossyWAV for POSIX
@@ -15,12 +15,14 @@ with C++11-compliant or POSIX-compliant code that provides similar
 functionality.
 
 None of the changes would be enabled at the preprocessing stage if _WIN32 is
-defined. Someone experienced in build systems can make a lot of improvements
-here.
+defined. Also, using libfftw3 is enabled with a simple define at build time.
 
-# How to Install
+Build-time checks and improvements are left for whoever is interested and
+experienced in that area.
+
+# How to Build and Install
 A simple `Makefile` is offered. Besides the default(*all*) target,
-The following targets are available:
+The following targets are offered:
 
 * **optimized**: Add optimization flags as follows:
   * *CXXFLAGS*:  -march=native -Ofast -flto
@@ -34,6 +36,9 @@ Passed **CXXFLAGS** and **LDFLAGS** (from shell or make) will be appended.
 
 No **install** target is provided. You would only need one file(`lossywav`)
 anyway.
+
+A **clean** target is available to remove all object files and the `lossywav` 
+executable.
 
 # Warning
 I take no responsibility for the patches offered in this repository.
