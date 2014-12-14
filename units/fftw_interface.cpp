@@ -21,8 +21,14 @@
 
 #include "fftw_interface.h"
 
+#ifdef _WIN32
+
 static HMODULE FFTW_DLL_Handle = nullptr;
 static bool FFTW_DLL_Loaded = false;
+
+#elif defined(ENABLE_FFTW)
+#include <fftw3.h>
+#endif
 
 FFTW_Rec FFTW;
 
@@ -31,12 +37,18 @@ bool Check_Initialised(FFTW_Rec& FFTW_Record)
     return ((&FFTW_Record.Plan_DFT_r2c_1d != nullptr)  && (&FFTW_Record.Plan_DFT_1d != nullptr) && (&FFTW_Record.Execute_R2C_New_Array != nullptr) && (&FFTW_Record.Destroy_Plan != nullptr));
 }
 
-
 bool FFTW_Initialised()
 {
+#ifdef _WIN32
     return FFTW_DLL_Loaded && (FFTW_DLL_Handle != nullptr);
+#elif defined(ENABLE_FFTW)
+    return true;
+#else
+    return false;
+#endif
 }
 
+#ifdef _WIN32
 
 void Initialise_FFTW_DLL(const char* this_DLL)
 {
@@ -56,9 +68,24 @@ void Initialise_FFTW_DLL(const char* this_DLL)
     FFTW_DLL_Loaded = Check_Initialised(FFTW) && (FFTW_DLL_Handle != nullptr);
 }
 
+#elif defined(ENABLE_FFTW)
+
+void Initialise_FFTW_FUNCS()
+{
+    FFTW.Plan_DFT_r2c_1d = (void*(*)(int,double*,double*,uint32_t))fftw_plan_dft_r2c_1d;
+    FFTW.Plan_DFT_1d = (void*(*)(int,double*,double*,int,uint32_t))fftw_plan_dft_1d;
+
+    FFTW.Execute_R2C_New_Array = (void(*)(void*, double*, double*))fftw_execute_dft_r2c;
+    FFTW.Execute_C2C_New_Array = (void(*)(void*, double*, double*))fftw_execute_dft;
+
+    FFTW.Destroy_Plan = (void(*)(void*))fftw_destroy_plan;
+}
+
+#endif
 
 bool FFTW_Initialise()
 {
+#ifdef _WIN32
     if (FFTW_DLL_Handle==nullptr)
     {
         Initialise_FFTW_DLL((char*) "libfftw3-3.dll\0");
@@ -69,21 +96,30 @@ bool FFTW_Initialise()
     {
         Initialise_FFTW_DLL((char*) "libfftw3-3_64.dll\0");
     }
+#elif defined(ENABLE_FFTW)
+    Initialise_FFTW_FUNCS();
+#endif
 
     return FFTW_Initialised();
 }
 
+#ifdef _WIN32
 
 bool CHECK_FFTW_DLL_Loaded()
 {
     return FFTW_DLL_Loaded;
 }
 
+#endif
 
 void FFTW_Cleanup()
 {
+#ifdef _WIN32
     if (FFTW_DLL_Handle != nullptr)
     {
+#endif
+
+#if defined(_WIN32) || defined(ENABLE_FFTW)
         for (int32_t fc_i = 1; fc_i != MAX_FFT_BIT_LENGTH; ++fc_i)
         {
             if (FFTW.Plans[fc_i] != nullptr)
@@ -103,8 +139,11 @@ void FFTW_Cleanup()
         FFTW.Execute_R2C_New_Array = nullptr;
         FFTW.Destroy_Plan = nullptr;
 
+#endif
+#ifdef _WIN32
         FreeLibrary(FFTW_DLL_Handle);
         FFTW_DLL_Handle = nullptr;
         FFTW_DLL_Loaded = false;
     }
+#endif
 }
