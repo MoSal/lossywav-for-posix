@@ -50,6 +50,37 @@ int Sleep(double interval)
     return nanosleep(&tm, NULL);
 }
 
+struct GUID
+{
+    uint32_t Data1;
+    uint16_t Data2;
+    uint16_t Data3;
+    uint8_t Data4[8];
+};
+
+
+bool GUID_compare(GUID g1, GUID g2)
+{
+    // true if not equal, false if equal
+
+    bool b1 = g1.Data1 != g2.Data1;
+    bool b2 = g1.Data2 != g2.Data2;
+    bool b3 = g1.Data3 != g2.Data3;
+
+    if (b1 || b2 || b3) {
+        return true;
+    }
+
+    for (int idx = 0; idx < 8; idx++) {
+        if (g1.Data4[idx] != g2.Data4[idx]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+#endif
+
 namespace {
 
 static const uint64_t MAX_uint64_t = 0xFFFFFFFFFFFFFFFFull;
@@ -1117,13 +1148,21 @@ void DetermineFileType(tRIFF_Rec &thisRIFF)
                 wavIOExitProc("Error Reading WAV64 file Information.", 0x11);
             }
 
+#ifndef _WIN32
+            if (GUID_compare(thisRIFF.Chunks.WAV.Header.Guid, GuidData[GUID_riff]))
+#else
             if (thisRIFF.Chunks.WAV.Header.Guid != GuidData[GUID_riff])
+#endif
             {
                 std::cerr << GuidToString(thisRIFF.Chunks.WAV.Header.Guid) << "; " << GuidToString(GuidData[GUID_riff]) << std::endl;
                 wavIOExitProc("Error Reading WAV64 file Information.", 0x11);
             }
 
+#ifndef _WIN32
+            if (GUID_compare(thisRIFF.Chunks.WAV.RIFFGuid, GuidData[GUID_wave]))
+#else
             if (thisRIFF.Chunks.WAV.RIFFGuid != GuidData[GUID_wave])
+#endif
             {
                 wavIOExitProc("WAVE64 'riff' type is not 'wave'.", 0x12);
             }
