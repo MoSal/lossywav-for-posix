@@ -129,10 +129,12 @@ void gettimer()
 }
 
 
+#ifdef _WIN32
 void setpriority(int32_t spv)
 {
     SetPriorityClass(GetCurrentProcess(), spv);
 }
+#endif
 
 
 std::string CardinalToHex(uint32_t cth_c)

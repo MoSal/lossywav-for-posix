@@ -25,6 +25,10 @@
 //    by Tyge Løvset (tycho), Aug. 2012
 //==============================================================================
 
+#ifndef _WIN32
+#include <sys/resource.h> // setpriority()
+#endif
+
 #include <cstdlib>
 
 #include "nCore.h"
@@ -548,8 +552,11 @@ bool check_parameter()
         {
             parmerror_multiple_selection();
         }
-
+#ifdef _WIN32
         setpriority(BELOW_NORMAL_PRIORITY_CLASS);
+#else
+        setpriority(PRIO_PROCESS, 0, 10);
+#endif
         parameters.priority = 1;
 
         return true;
@@ -565,7 +572,11 @@ bool check_parameter()
         }
 
         parameters.priority = 2;
+#ifdef _WIN32
         setpriority(IDLE_PRIORITY_CLASS);
+#else
+        setpriority(PRIO_PROCESS, 0, 19); // Not IDLE, but avoids Linuxisms.
+#endif
 
         return true;
     }
