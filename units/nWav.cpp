@@ -39,6 +39,11 @@
 #include "nMaths.h"
 #include "nOutput.h"
 
+#ifndef _WIN32
+
+#define GetLastError() errno
+#define ERROR_BROKEN_PIPE EPIPE
+
 #include <ctime>
 
 int Sleep(double interval)
