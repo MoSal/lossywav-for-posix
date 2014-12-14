@@ -34,6 +34,20 @@
 #include "nCore.h"
 #include "nMaths.h"
 
+#ifndef _WIN32
+
+void QueryPerformanceCounter(std::chrono::steady_clock::time_point *t)
+{
+    *t = std::chrono::steady_clock::now();
+}
+
+double GetTimeElapsed(std::chrono::steady_clock::time_point *Stop, std::chrono::steady_clock::time_point *Start)
+{
+    return std::chrono::duration_cast<std::chrono::duration<double>>(*Stop - *Start).count();
+}
+
+#endif
+
 //============================================================================
 // Define global vars
 //============================================================================
@@ -103,7 +117,12 @@ void GetVersionInfo()
 void gettimer()
 {
     QueryPerformanceCounter(&timer.Stop);
+#ifdef _WIN32
     timer.Elapsed = (timer.Stop64 - timer.Start64) * timer.Period;
+#else
+    timer.Elapsed = GetTimeElapsed(&timer.Stop, &timer.Start);
+
+#endif
 
     if (timer.Elapsed != 0)
         Global.processing_rate = Global.samples_processed * Global.sample_rate_recip / timer.Elapsed;
@@ -269,9 +288,11 @@ void nCore_Init()
     }
 
     timer.StartTime = std::time(nullptr);
-    QueryPerformanceFrequency(&timer.Frequency);
     QueryPerformanceCounter(&timer.Start);
+#ifdef _WIN32
+    QueryPerformanceFrequency(&timer.Frequency);
     timer.Period = 1.0 / timer.Frequency64;
+#endif
 
     for (nt_i = 0; nt_i < int(MAX_FFT_LENGTH); ++nt_i)
     {

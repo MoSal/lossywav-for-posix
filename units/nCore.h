@@ -29,7 +29,12 @@
 #define nCore_h_
 #define NOMINMAX 1
 
+#ifdef _WIN32
 #include <windows.h> // For now...
+#else
+#include <chrono>
+#endif
+
 #include <cmath>
 #include <string>
 
@@ -327,6 +332,19 @@ extern double OneOver[MAX_FFT_LENGTH + 2]     __attribute__ ((aligned(16)));
 //============================================================================
 // Global variables used by the Units.
 //============================================================================
+
+#ifndef _WIN32
+
+extern struct timer_type
+{
+    time_t StartTime;
+    double Elapsed;
+    std::chrono::steady_clock::time_point Start;
+    std::chrono::steady_clock::time_point Stop;
+} timer     __attribute__ ((aligned(16)));
+
+#else
+
 extern struct timer_type
 {
     union
@@ -349,6 +367,7 @@ extern struct timer_type
     time_t StartTime;
 } timer     __attribute__ ((aligned(16)));
 
+#endif
 
 extern struct Global_type
 {
