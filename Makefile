@@ -58,9 +58,7 @@ prep-fftw: prep
 	$(eval override CXXFLAGS += -DENABLE_FFTW)
 	$(eval override LIBS += -lfftw3)
 
-prep-fftw-optimized: prep-optimized
-	$(eval override CXXFLAGS += -DENABLE_FFTW)
-	$(eval override LIBS += -lfftw3)
+prep-fftw-optimized: prep-optimized prep-fftw
 
 *.o: ${@:.o=.cpp} $(HEADERS)
 	${CXX} -c ${@:.o=.cpp} -o ${@} ${CXXFLAGS}
