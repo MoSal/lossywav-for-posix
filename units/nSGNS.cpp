@@ -1,35 +1,36 @@
-//==============================================================================
-//
-//    lossyWAV: Added noise WAV bit reduction method by David Robinson;
-//              Noise shaping coefficients by Sebastian Gesemann;
-//
-//    Copyright (C) 2007-2013 Nick Currie, Copyleft.
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//    Contact: lossywav <at> hotmail <dot> co <dot> uk
-//
-//==============================================================================
-//    Initial translation to C++ from Delphi
-//    by Tyge Løvset (tycho), Aug. 2012
-//==============================================================================
+/**===========================================================================
+
+    lossyWAV: Added noise WAV bit reduction method by David Robinson;
+              Noise shaping coefficients by Sebastian Gesemann;
+
+    Copyright (C) 2007-2016 Nick Currie, Copyleft.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact: lossywav <at> hotmail <dot> co <dot> uk
+
+==============================================================================
+    Initial translation to C++ from Delphi
+    Copyright (C) Tyge Løvset (tycho), Aug. 2012
+===========================================================================**/
 
 #include "nSGNS.h"
+#include "nParameter.h"
 
 namespace { // anonymous
 
-static const int32_t _factor_lookup_shift  __attribute__ ((aligned(16))) = (LONG_FFT_BIT_LENGTH - SHORT_FFT_BIT_LENGTH);
+static const int32_t _factor_lookup_shift  __attribute__ ((aligned(16))) = (LONG_ANALYSIS - SHORT_ANALYSIS);
 static const int32_t _factor_lookup_mask   __attribute__ ((aligned(16))) = (1 << _factor_lookup_shift) - 1;
 
 //============================================================================
@@ -47,7 +48,6 @@ static const float FNS_Gain[37]  __attribute__ ((aligned(16))) =
 
 static const float FNS_Spline[37]  __attribute__ ((aligned(16))) =
 {  0.0000d,  0.0204d, -0.0018d, -0.0024d, -0.0029d, -0.0037d, -0.0047d, -0.0059d, -0.0073d, -0.0094d, -0.0117d, -0.0149d, -0.0185d, -0.0235d, -0.0297d, -0.0371d, -0.0465d, -0.0574d, -0.0698d, -0.0826d, -0.1009d, -0.1350d, -0.1748d, -0.2250d, -0.3598d, 0.4932d, 1.4643d, 1.5581d, 0.7738d, -0.0985d,  0.0285d,  1.2331d, 10.8512d, -9.8881d, -4.9830d,  0.0000d,  0.0000d};
-
 
 struct SGNS_type
 {
@@ -79,7 +79,7 @@ struct SGNS_type
     int32_t            Filter_Order_M1      __attribute__ ((aligned(16)));
 
     void*              FFTW_Plan_Inverse    __attribute__ ((aligned(16)));
-
+    FFT_Data_Rec       FFT                  __attribute__ ((aligned(16)));
     FFT_Proc_Rec       nFFT_plan            __attribute__ ((aligned(16)));
 
     int32_t            Limit_Freq_Bin       __attribute__ ((aligned(16)));
@@ -96,8 +96,6 @@ struct SGNS_type
 
 } // namespace
 
-#define _filter_rolled_loop_
-
 void Warped_Lattice_Filter_Init(int32_t this_channel)
 {
     Filter_Rec* this_Filter = &SGNS.Filters[this_channel];
@@ -107,1033 +105,7 @@ void Warped_Lattice_Filter_Init(int32_t this_channel)
 
     int32_t count=0;
 
-    while (SGNS.Filter_Order-count>63)
-    {
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        double A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-    }
-
-    if (SGNS.Filter_Order-count>31)
-    {
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        double A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-    }
-
-    if (SGNS.Filter_Order-count>15)
-    {
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        double A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-    }
-
-    if (SGNS.Filter_Order-count>7)
-    {
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        double A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-    }
-
-    if (SGNS.Filter_Order-count>3)
-    {
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        double A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-    }
-
-    if (SGNS.Filter_Order-count>1)
-    {
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        double A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-
-        this_Filter->State[count] = 0;
-        this_Filter->xState[count] = u;
-        u *= SGNS.MinusLambda;
-        A = u + this_Filter->k[count] * o;
-        o += this_Filter->k[count] * u;
-        u = A;
-        count++;
-    }
-
-    if ((SGNS.Filter_Order-count)>0)
+    while (SGNS.Filter_Order > count)
     {
         this_Filter->State[count] = 0;
         this_Filter->xState[count] = u;
@@ -1152,1037 +124,12 @@ double Warped_Lattice_Filter_Evaluate(int32_t this_channel)
 {
     Filter_Rec* this_Filter = &SGNS.Filters[this_channel];
 
-    int32_t count=0;
     double o = 0;
     double u = 0;
 
-    while ((SGNS.Filter_Order - count) > 63)
-    {
-        double A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        double B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
+    int32_t count=0;
 
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-    }
-
-    if ((SGNS.Filter_Order-count)>31)
-    {
-        double A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        double B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-    }
-
-    if ((SGNS.Filter_Order-count)>15)
-    {
-        double A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        double B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-    }
-
-    if ((SGNS.Filter_Order-count)>7)
-    {
-        double A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        double B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-    }
-
-    if ((SGNS.Filter_Order-count)>3)
-    {
-        double A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        double B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-    }
-
-    if ((SGNS.Filter_Order-count)>1)
-    {
-        double A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        double B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-
-        A = this_Filter->State[count];
-        this_Filter->State[count] = u + SGNS.Lambda * A;
-        u = SGNS.OneMinusLambda2 * A - SGNS.Lambda * u;
-        B = o;
-        o += this_Filter->k[count] * u;
-        u += this_Filter->k[count] * B;
-        count++;
-    }
-
-    if ((SGNS.Filter_Order-count)>0)
+    while (SGNS.Filter_Order > count)
     {
         double A = this_Filter->State[count];
         this_Filter->State[count] = u + SGNS.Lambda * A;
@@ -2199,167 +146,11 @@ double Warped_Lattice_Filter_Evaluate(int32_t this_channel)
 
 void Warped_Lattice_Filter_Update(int32_t this_channel, double fqe)
 {
-    int32_t count=0;
-
     Filter_Rec* this_Filter = &SGNS.Filters[this_channel];
 
-    while ((SGNS.Filter_Order-count)>63)
-    {
-        this_Filter->State[count] += fqe * this_Filter->xState[count];
-        this_Filter->State[count + 0x01] += fqe * this_Filter->xState[count + 0x01];
-        this_Filter->State[count + 0x02] += fqe * this_Filter->xState[count + 0x02];
-        this_Filter->State[count + 0x03] += fqe * this_Filter->xState[count + 0x03];
-        this_Filter->State[count + 0x04] += fqe * this_Filter->xState[count + 0x04];
-        this_Filter->State[count + 0x05] += fqe * this_Filter->xState[count + 0x05];
-        this_Filter->State[count + 0x06] += fqe * this_Filter->xState[count + 0x06];
-        this_Filter->State[count + 0x07] += fqe * this_Filter->xState[count + 0x07];
-        this_Filter->State[count + 0x08] += fqe * this_Filter->xState[count + 0x08];
-        this_Filter->State[count + 0x09] += fqe * this_Filter->xState[count + 0x09];
-        this_Filter->State[count + 0x0a] += fqe * this_Filter->xState[count + 0x0a];
-        this_Filter->State[count + 0x0b] += fqe * this_Filter->xState[count + 0x0b];
-        this_Filter->State[count + 0x0c] += fqe * this_Filter->xState[count + 0x0c];
-        this_Filter->State[count + 0x0d] += fqe * this_Filter->xState[count + 0x0d];
-        this_Filter->State[count + 0x0e] += fqe * this_Filter->xState[count + 0x0e];
-        this_Filter->State[count + 0x0f] += fqe * this_Filter->xState[count + 0x0f];
-        this_Filter->State[count + 0x10] += fqe * this_Filter->xState[count + 0x10];
-        this_Filter->State[count + 0x11] += fqe * this_Filter->xState[count + 0x11];
-        this_Filter->State[count + 0x12] += fqe * this_Filter->xState[count + 0x12];
-        this_Filter->State[count + 0x13] += fqe * this_Filter->xState[count + 0x13];
-        this_Filter->State[count + 0x14] += fqe * this_Filter->xState[count + 0x14];
-        this_Filter->State[count + 0x15] += fqe * this_Filter->xState[count + 0x15];
-        this_Filter->State[count + 0x16] += fqe * this_Filter->xState[count + 0x16];
-        this_Filter->State[count + 0x17] += fqe * this_Filter->xState[count + 0x17];
-        this_Filter->State[count + 0x18] += fqe * this_Filter->xState[count + 0x18];
-        this_Filter->State[count + 0x19] += fqe * this_Filter->xState[count + 0x19];
-        this_Filter->State[count + 0x1a] += fqe * this_Filter->xState[count + 0x1a];
-        this_Filter->State[count + 0x1b] += fqe * this_Filter->xState[count + 0x1b];
-        this_Filter->State[count + 0x1c] += fqe * this_Filter->xState[count + 0x1c];
-        this_Filter->State[count + 0x1d] += fqe * this_Filter->xState[count + 0x1d];
-        this_Filter->State[count + 0x1e] += fqe * this_Filter->xState[count + 0x1e];
-        this_Filter->State[count + 0x1f] += fqe * this_Filter->xState[count + 0x1f];
-        this_Filter->State[count + 0x20] += fqe * this_Filter->xState[count + 0x20];
-        this_Filter->State[count + 0x21] += fqe * this_Filter->xState[count + 0x21];
-        this_Filter->State[count + 0x22] += fqe * this_Filter->xState[count + 0x22];
-        this_Filter->State[count + 0x23] += fqe * this_Filter->xState[count + 0x23];
-        this_Filter->State[count + 0x24] += fqe * this_Filter->xState[count + 0x24];
-        this_Filter->State[count + 0x25] += fqe * this_Filter->xState[count + 0x25];
-        this_Filter->State[count + 0x26] += fqe * this_Filter->xState[count + 0x26];
-        this_Filter->State[count + 0x27] += fqe * this_Filter->xState[count + 0x27];
-        this_Filter->State[count + 0x28] += fqe * this_Filter->xState[count + 0x28];
-        this_Filter->State[count + 0x29] += fqe * this_Filter->xState[count + 0x29];
-        this_Filter->State[count + 0x2a] += fqe * this_Filter->xState[count + 0x2a];
-        this_Filter->State[count + 0x2b] += fqe * this_Filter->xState[count + 0x2b];
-        this_Filter->State[count + 0x2c] += fqe * this_Filter->xState[count + 0x2c];
-        this_Filter->State[count + 0x2d] += fqe * this_Filter->xState[count + 0x2d];
-        this_Filter->State[count + 0x2e] += fqe * this_Filter->xState[count + 0x2e];
-        this_Filter->State[count + 0x2f] += fqe * this_Filter->xState[count + 0x2f];
-        this_Filter->State[count + 0x30] += fqe * this_Filter->xState[count + 0x30];
-        this_Filter->State[count + 0x31] += fqe * this_Filter->xState[count + 0x31];
-        this_Filter->State[count + 0x32] += fqe * this_Filter->xState[count + 0x32];
-        this_Filter->State[count + 0x33] += fqe * this_Filter->xState[count + 0x33];
-        this_Filter->State[count + 0x34] += fqe * this_Filter->xState[count + 0x34];
-        this_Filter->State[count + 0x35] += fqe * this_Filter->xState[count + 0x35];
-        this_Filter->State[count + 0x36] += fqe * this_Filter->xState[count + 0x36];
-        this_Filter->State[count + 0x37] += fqe * this_Filter->xState[count + 0x37];
-        this_Filter->State[count + 0x38] += fqe * this_Filter->xState[count + 0x38];
-        this_Filter->State[count + 0x39] += fqe * this_Filter->xState[count + 0x39];
-        this_Filter->State[count + 0x3a] += fqe * this_Filter->xState[count + 0x3a];
-        this_Filter->State[count + 0x3b] += fqe * this_Filter->xState[count + 0x3b];
-        this_Filter->State[count + 0x3c] += fqe * this_Filter->xState[count + 0x3c];
-        this_Filter->State[count + 0x3d] += fqe * this_Filter->xState[count + 0x3d];
-        this_Filter->State[count + 0x3e] += fqe * this_Filter->xState[count + 0x3e];
-        this_Filter->State[count + 0x3f] += fqe * this_Filter->xState[count + 0x3f];
-        count += 64;
-    }
+    int32_t count=0;
 
-    if ((SGNS.Filter_Order-count)>31)
-    {
-        this_Filter->State[count] += fqe * this_Filter->xState[count];
-        this_Filter->State[count + 0x01] += fqe * this_Filter->xState[count + 0x01];
-        this_Filter->State[count + 0x02] += fqe * this_Filter->xState[count + 0x02];
-        this_Filter->State[count + 0x03] += fqe * this_Filter->xState[count + 0x03];
-        this_Filter->State[count + 0x04] += fqe * this_Filter->xState[count + 0x04];
-        this_Filter->State[count + 0x05] += fqe * this_Filter->xState[count + 0x05];
-        this_Filter->State[count + 0x06] += fqe * this_Filter->xState[count + 0x06];
-        this_Filter->State[count + 0x07] += fqe * this_Filter->xState[count + 0x07];
-        this_Filter->State[count + 0x08] += fqe * this_Filter->xState[count + 0x08];
-        this_Filter->State[count + 0x09] += fqe * this_Filter->xState[count + 0x09];
-        this_Filter->State[count + 0x0a] += fqe * this_Filter->xState[count + 0x0a];
-        this_Filter->State[count + 0x0b] += fqe * this_Filter->xState[count + 0x0b];
-        this_Filter->State[count + 0x0c] += fqe * this_Filter->xState[count + 0x0c];
-        this_Filter->State[count + 0x0d] += fqe * this_Filter->xState[count + 0x0d];
-        this_Filter->State[count + 0x0e] += fqe * this_Filter->xState[count + 0x0e];
-        this_Filter->State[count + 0x0f] += fqe * this_Filter->xState[count + 0x0f];
-        this_Filter->State[count + 0x10] += fqe * this_Filter->xState[count + 0x10];
-        this_Filter->State[count + 0x11] += fqe * this_Filter->xState[count + 0x11];
-        this_Filter->State[count + 0x12] += fqe * this_Filter->xState[count + 0x12];
-        this_Filter->State[count + 0x13] += fqe * this_Filter->xState[count + 0x13];
-        this_Filter->State[count + 0x14] += fqe * this_Filter->xState[count + 0x14];
-        this_Filter->State[count + 0x15] += fqe * this_Filter->xState[count + 0x15];
-        this_Filter->State[count + 0x16] += fqe * this_Filter->xState[count + 0x16];
-        this_Filter->State[count + 0x17] += fqe * this_Filter->xState[count + 0x17];
-        this_Filter->State[count + 0x18] += fqe * this_Filter->xState[count + 0x18];
-        this_Filter->State[count + 0x19] += fqe * this_Filter->xState[count + 0x19];
-        this_Filter->State[count + 0x1a] += fqe * this_Filter->xState[count + 0x1a];
-        this_Filter->State[count + 0x1b] += fqe * this_Filter->xState[count + 0x1b];
-        this_Filter->State[count + 0x1c] += fqe * this_Filter->xState[count + 0x1c];
-        this_Filter->State[count + 0x1d] += fqe * this_Filter->xState[count + 0x1d];
-        this_Filter->State[count + 0x1e] += fqe * this_Filter->xState[count + 0x1e];
-        this_Filter->State[count + 0x1f] += fqe * this_Filter->xState[count + 0x1f];
-        count += 32;
-    }
-
-    if ((SGNS.Filter_Order-count)>15)
-    {
-        this_Filter->State[count] += fqe * this_Filter->xState[count];
-        this_Filter->State[count +  1] += fqe * this_Filter->xState[count +  1];
-        this_Filter->State[count +  2] += fqe * this_Filter->xState[count +  2];
-        this_Filter->State[count +  3] += fqe * this_Filter->xState[count +  3];
-        this_Filter->State[count +  4] += fqe * this_Filter->xState[count +  4];
-        this_Filter->State[count +  5] += fqe * this_Filter->xState[count +  5];
-        this_Filter->State[count +  6] += fqe * this_Filter->xState[count +  6];
-        this_Filter->State[count +  7] += fqe * this_Filter->xState[count +  7];
-        this_Filter->State[count +  8] += fqe * this_Filter->xState[count +  8];
-        this_Filter->State[count +  9] += fqe * this_Filter->xState[count +  9];
-        this_Filter->State[count + 10] += fqe * this_Filter->xState[count + 10];
-        this_Filter->State[count + 11] += fqe * this_Filter->xState[count + 11];
-        this_Filter->State[count + 12] += fqe * this_Filter->xState[count + 12];
-        this_Filter->State[count + 13] += fqe * this_Filter->xState[count + 13];
-        this_Filter->State[count + 14] += fqe * this_Filter->xState[count + 14];
-        this_Filter->State[count + 15] += fqe * this_Filter->xState[count + 15];
-        count += 16;
-    }
-
-    if ((SGNS.Filter_Order-count)>7)
-    {
-        this_Filter->State[count] += fqe * this_Filter->xState[count];
-        this_Filter->State[count + 1] += fqe * this_Filter->xState[count + 1];
-        this_Filter->State[count + 2] += fqe * this_Filter->xState[count + 2];
-        this_Filter->State[count + 3] += fqe * this_Filter->xState[count + 3];
-        this_Filter->State[count + 4] += fqe * this_Filter->xState[count + 4];
-        this_Filter->State[count + 5] += fqe * this_Filter->xState[count + 5];
-        this_Filter->State[count + 6] += fqe * this_Filter->xState[count + 6];
-        this_Filter->State[count + 7] += fqe * this_Filter->xState[count + 7];
-        count += 8;
-    }
-
-    if ((SGNS.Filter_Order-count)>3)
-    {
-        this_Filter->State[count] += fqe * this_Filter->xState[count];
-        this_Filter->State[count + 1] += fqe * this_Filter->xState[count + 1];
-        this_Filter->State[count + 2] += fqe * this_Filter->xState[count + 2];
-        this_Filter->State[count + 3] += fqe * this_Filter->xState[count + 3];
-        count += 4;
-    }
-
-    if ((SGNS.Filter_Order-count)>1)
-    {
-        this_Filter->State[count] += fqe * this_Filter->xState[count];
-        this_Filter->State[count + 1] += fqe * this_Filter->xState[count + 1];
-        count += 2;
-    }
-
-    if ((SGNS.Filter_Order-count)>0)
+    while (SGNS.Filter_Order > count)
     {
         this_Filter->State[count] += fqe * this_Filter->xState[count];
         count++;
@@ -2371,16 +162,19 @@ void Process_Stored_Results_Cubic_AltFilter()
 {
     double running_total = 0.0d;
 
+    Results_Type* results_short = &results.WAVE[SHORT_ANALYSIS][Current.Channel];
+    Results_Type* results_long  = &results.WAVE[LONG_ANALYSIS][Current.Channel];
+
     CubicInterp_Rec CI = {0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d};
 
-    CI.y2 = SGNSFFT.FFT_results_short_root[0];
-    CI.y3 = SGNSFFT.FFT_results_short_root[1];
+    CI.y2 = results_short->SGNSRoot[0];
+    CI.y3 = results_short->SGNSRoot[1];
     CI.y1 = CI.y2 + CI.y2 - CI.y3;
 
     //==========================================================================
     // Fill desired shape curve.
     //==========================================================================
-    for (int32_t ts_i = 0; ts_i <= SGNSFFT.FFT.length_half; ts_i++)
+    for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
     {
         int32_t short_index = ts_i >> _factor_lookup_shift;
 
@@ -2394,8 +188,8 @@ void Process_Stored_Results_Cubic_AltFilter()
             CI.y1 = CI.y2;
             CI.y2 = CI.y3;
 
-            if (short_index < history.FFT.length_half_m1)
-                CI.y3 = SGNSFFT.FFT_results_short_root[short_index+2];
+            if (short_index < settings.analysis[SHORT_ANALYSIS].FFT.length_half_m1)
+                CI.y3 = results_short->SGNSRoot[short_index+2];
             else
                 CI.y3 = CI.y2 + CI.y2 - CI.y1;
         }
@@ -2403,7 +197,7 @@ void Process_Stored_Results_Cubic_AltFilter()
         double result_short = CubicInterp(&CI);
         result_short *= ((result_short >= 0.0d) * (result_short * result_short));
 
-        double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (SGNSFFT.FFT_results_long[ts_i] * SGNSFFT.FFT_results_long_root[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
+        double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (results_long->SGNSUnity[ts_i] * results_long->SGNSRoot[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
 
         running_total += result_combined;
         SGNS.Shape_Curve[ts_i] = result_combined;
@@ -2416,18 +210,21 @@ void Process_Stored_Results_AltFilter()
 {
     double running_total = 0.0d;
 
+    Results_Type* results_short = &results.WAVE[SHORT_ANALYSIS][Current.Channel];
+    Results_Type* results_long  = &results.WAVE[LONG_ANALYSIS][Current.Channel];
+
     //==========================================================================
     // Fill desired shape curve.
     //==========================================================================
-    for (int32_t ts_i = 0; ts_i <= SGNSFFT.FFT.length_half; ts_i++)
+    for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
     {
         int32_t factor_lookup = ts_i & _factor_lookup_mask;
         int32_t short_index = ts_i >> _factor_lookup_shift;
 
-        double result_short = (SGNSFFT.FFT_results_short_root[short_index] * SGNS.lo_fact[factor_lookup]) + (SGNSFFT.FFT_results_short_root[short_index + 1] * SGNS.hi_fact[factor_lookup]);
+        double result_short = (results_short->SGNSRoot[short_index] * SGNS.lo_fact[factor_lookup]) + (results_short->SGNSRoot[short_index + 1] * SGNS.hi_fact[factor_lookup]);
         result_short *= ((result_short >= 0.0d) * (result_short * result_short));
 
-        double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (SGNSFFT.FFT_results_long[ts_i] * SGNSFFT.FFT_results_long_root[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
+        double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (results_long->SGNSUnity[ts_i] * results_long->SGNSRoot[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
 
         running_total += result_combined;
         SGNS.Shape_Curve[ts_i] = result_combined;
@@ -2439,16 +236,19 @@ void Process_Stored_Results_Cubic()
 {
     double running_total = 0.0d;
 
+    Results_Type* results_short = &results.WAVE[SHORT_ANALYSIS][Current.Channel];
+    Results_Type* results_long  = &results.WAVE[LONG_ANALYSIS][Current.Channel];
+
     CubicInterp_Rec CI = {0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d};
 
-    CI.y3 = SGNSFFT.FFT_results_short_root[1];
-    CI.y2 = SGNSFFT.FFT_results_short_root[0];
+    CI.y3 = results_short->SGNSRoot[1];
+    CI.y2 = results_short->SGNSRoot[0];
     CI.y1 = CI.y2 + CI.y2 - CI.y3;
 
     //==========================================================================
     // Fill desired shape curve.
     //==========================================================================
-    for (int32_t ts_i = 0; ts_i <= SGNSFFT.FFT.length_half; ts_i++)
+    for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
     {
         int32_t short_index = ts_i >> _factor_lookup_shift;
 
@@ -2456,16 +256,14 @@ void Process_Stored_Results_Cubic()
 
         CI.x = SGNS.hi_fact[factor_lookup];
 
-//                std::cerr << short_index << "; " << factor_lookup << "; " << CI.x << "; " << std::endl;
-
         if (factor_lookup == 0)
         {
             CI.y0 = CI.y1;
             CI.y1 = CI.y2;
             CI.y2 = CI.y3;
 
-            if (short_index < history.FFT.length_half_m1)
-                CI.y3 = SGNSFFT.FFT_results_short_root[short_index+2];
+            if (short_index < settings.analysis[SHORT_ANALYSIS].FFT.length_half_m1)
+                CI.y3 = results_short->SGNSRoot[short_index+2];
             else
                 CI.y3 = CI.y2 + CI.y2 - CI.y1;
         }
@@ -2473,7 +271,7 @@ void Process_Stored_Results_Cubic()
         double result_short = CubicInterp(&CI);
         result_short *= ((result_short >= 0.0d) * (result_short));
 
-        double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (SGNSFFT.FFT_results_long[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
+        double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (results_long->SGNSUnity[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
 
         running_total += result_combined;
         SGNS.Shape_Curve[ts_i] = result_combined;
@@ -2485,25 +283,81 @@ void Process_Stored_Results_Default()
 {
     double running_total = 0.0d;
 
+    Results_Type* results_short = &results.WAVE[SHORT_ANALYSIS][Current.Channel];
+    Results_Type* results_long  = &results.WAVE[LONG_ANALYSIS][Current.Channel];
+
     //==========================================================================
     // Fill desired shape curve.
     //==========================================================================
-    for (int32_t ts_i = 0; ts_i <= SGNSFFT.FFT.length_half; ts_i++)
+    for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
     {
         int32_t factor_lookup = ts_i & _factor_lookup_mask;
 
         int32_t short_index = ts_i >> _factor_lookup_shift;
 
-        double result_short = (SGNSFFT.FFT_results_short[short_index] * SGNS.lo_fact[factor_lookup]) + (SGNSFFT.FFT_results_short[short_index + 1] * SGNS.hi_fact[factor_lookup]);
+        double result_short = (results_short->SGNSUnity[short_index] * SGNS.lo_fact[factor_lookup]) + (results_short->SGNSUnity[short_index + 1] * SGNS.hi_fact[factor_lookup]);
 
-        double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (SGNSFFT.FFT_results_long[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
+        double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (results_long->SGNSUnity[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
 
         running_total += result_combined;
         SGNS.Shape_Curve[ts_i] = result_combined;
         SGNS.Shape_Total[ts_i] = running_total;
     }
+}
 
 
+void Process_Stored_Results_Hybrid()
+{
+    {
+        Results_Type* this_result = &results.WAVE[LONG_ANALYSIS][Current.Channel];
+
+        for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
+        {
+            SGNS.Shape_Curve[ts_i] = this_result->SGNSHybrid[ts_i] * LONG_ANALYSIS;
+        }
+    }
+
+    int32_t analyses_sum = LONG_ANALYSIS;
+
+    for (int32_t this_analysis = 1; this_analysis < PRECALC_ANALYSES; this_analysis++)
+    {
+        if (settings.analysis[this_analysis].active)
+        {
+            Results_Type* this_result = &results.WAVE[this_analysis][Current.Channel];
+
+            analyses_sum += this_analysis;
+
+            int32_t this_factor_shift = LONG_ANALYSIS - this_analysis;
+
+            int32_t this_factor_mask = PowersOf.TwoM1[this_factor_shift];
+
+            double this_factor_recip = PowersOf.TwoX[TWO_OFFSET + -this_factor_shift];
+
+            for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
+            {
+                double factor = (ts_i & this_factor_mask) * this_factor_recip;
+
+                int32_t index = ts_i >> this_factor_shift;
+
+                SGNS.Shape_Curve[ts_i] += ((this_result->SGNSHybrid[index] * (1.0d - factor)) + (this_result->SGNSHybrid[index + 1] * factor)) * this_analysis;
+            }
+        }
+    }
+
+    double this_divisor = OneOver[analyses_sum];
+
+    double running_total = 0.0d;
+
+    for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
+    {
+        double result =  nroot(SGNS.Shape_Curve[ts_i] * this_divisor) * SGNS.Gain[ts_i] + parameters.shaping.extra;
+
+        running_total += result;
+
+        SGNS.Shape_Curve[ts_i] = result;
+
+        SGNS.Shape_Total[ts_i] = running_total;
+    }
 }
 
 
@@ -2517,7 +371,7 @@ void Modify_Shape_Using_Average()
         // Calculate average up to Limit_Freq_Bin
         //==========================================================================
 
-        for (int32_t ts_i = SGNS.Upper_Freq_Bin + 1; ts_i <= SGNSFFT.FFT.length_half; ts_i++)
+        for (int32_t ts_i = SGNS.Upper_Freq_Bin + 1; ts_i <= SGNS.FFT.length_half; ts_i++)
         {
             double ts_x = SGNS.Shape_Curve[ts_i];
 
@@ -2535,14 +389,14 @@ double Fill_FFT_With_Warped_Spectrum_Cubic()
     double ts_t = 0;
     CubicInterp_Rec CI;
 
-    for (int32_t ts_i = 0; ts_i <= SGNSFFT.FFT.length_half; ts_i++)
+    for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
     {
         CI.x = SGNS.Warp_Frac[ts_i];
 
         int32_t ts_j = SGNS.Warp_Int[ts_i];
 
         bool _is_not_zero = (ts_j > 0);
-        bool _is_not_max = (ts_j < SGNSFFT.FFT.length_half_m1);
+        bool _is_not_max = (ts_j < SGNS.FFT.length_half_m1);
 
         if (_is_not_zero && _is_not_max)
         {
@@ -2561,18 +415,18 @@ double Fill_FFT_With_Warped_Spectrum_Cubic()
                 CI.y0 -= (CI.y0) * (CI.y0 < 0);
             }
             else
-                if (ts_j == SGNSFFT.FFT.length_half_m1)
+                if (ts_j == SGNS.FFT.length_half_m1)
                 {
-                    CI.y0 = SGNS.Shape_Total[SGNSFFT.FFT.length_half_m1 - 1];
-                    CI.y1 = SGNS.Shape_Total[SGNSFFT.FFT.length_half_m1];
-                    CI.y2 = SGNS.Shape_Total[SGNSFFT.FFT.length_half_m1 + 1];
+                    CI.y0 = SGNS.Shape_Total[SGNS.FFT.length_half_m1 - 1];
+                    CI.y1 = SGNS.Shape_Total[SGNS.FFT.length_half_m1];
+                    CI.y2 = SGNS.Shape_Total[SGNS.FFT.length_half_m1 + 1];
                     CI.y3 = CI.y2 + CI.y2 - CI.y1;
-                    CI.y0 -= (CI.y3) * (CI.y3 < 0);
+                    CI.y3 -= (CI.y3) * (CI.y3 < 0);
                 }
                 else
                 {
-                    CI.y0 = SGNS.Shape_Total[SGNSFFT.FFT.length_half_m1];
-                    CI.y1 = SGNS.Shape_Total[SGNSFFT.FFT.length_half_m1 + 1];
+                    CI.y0 = SGNS.Shape_Total[SGNS.FFT.length_half_m1];
+                    CI.y1 = SGNS.Shape_Total[SGNS.FFT.length_half_m1 + 1];
                     CI.y2 = CI.y1 + CI.y1 - CI.y0;
                     CI.y2 -= (CI.y2) * (CI.y2 < 0);
                     CI.y3 = CI.y2 + CI.y2 - CI.y1;
@@ -2587,9 +441,9 @@ double Fill_FFT_With_Warped_Spectrum_Cubic()
 
         ts_t += ts_y * ts_y;
 
-        FFT_Array.DComplex[ts_i + ((SGNSFFT.FFT.length - 2 * ts_i) * ((ts_i & SGNSFFT.FFT.length_half_m1) > 0))] = real(ts_y);
+        FFT_Array.DComplex[ts_i + ((SGNS.FFT.length - 2 * ts_i) * ((ts_i & SGNS.FFT.length_half_m1) > 0))] = DComplex(ts_y, 0.);
 
-        FFT_Array.DComplex[ts_i] = real(ts_y);
+        FFT_Array.DComplex[ts_i] = DComplex(ts_y, 0.);
 
         ts_x = ts_z;
     }
@@ -2603,7 +457,7 @@ double Fill_FFT_With_Warped_Spectrum_Default()
     double ts_x = 0;
     double ts_t = 0;
 
-    for (int32_t ts_i = 0; ts_i <= SGNSFFT.FFT.length_half; ts_i++)
+    for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
     {
         int32_t ts_j = SGNS.Warp_Int[ts_i];
 
@@ -2614,9 +468,9 @@ double Fill_FFT_With_Warped_Spectrum_Default()
 
         ts_t += ts_y * ts_y;
 
-        FFT_Array.DComplex[ts_i + ((SGNSFFT.FFT.length - ts_i - ts_i) * ((ts_i & SGNSFFT.FFT.length_half_m1) > 0))] = real(ts_y);
+        FFT_Array.DComplex[ts_i + ((SGNS.FFT.length - ts_i - ts_i) * ((ts_i & SGNS.FFT.length_half_m1) > 0))] = DComplex(ts_y, 0.);
 
-        FFT_Array.DComplex[ts_i] = real(ts_y);
+        FFT_Array.DComplex[ts_i] = DComplex(ts_y, 0.);
 
         ts_x = ts_z;
     }
@@ -2668,7 +522,7 @@ static bool Levinson(Filter_Rec* this_Filter)
 
 double Make_Filter(int32_t this_channel)
 {
-    SGNS.nFFT_plan.NumberOfBitsNeeded = SGNSFFT.FFT.bit_length;
+    SGNS.nFFT_plan.NumberOfBitsNeeded = SGNS.FFT.bit_length;
     SGNS.nFFT_plan.FFT_Array = &FFT_Array;
 
     if ((parameters.shaping.active) && (!parameters.shaping.fixed))
@@ -2732,13 +586,15 @@ double warped_frequency(double Lambda, double Freq)
 
 void nSGNS_Initialise()
 {
+    SGNS.FFT = FFT_PreCalc_Data_Rec[settings.analysis[LONG_ANALYSIS].FFT.bit_length];
+
     int32_t si_i, si_j, si_k;
 
     double average_factor;
     double average_power;
     double gain_amplitude;
     double gain_power;
-    double Bins_to_Freq = Global.sample_rate * SGNSFFT.FFT.length_recip;
+    double Bins_to_Freq = Global.sample_rate * SGNS.FFT.length_recip;
 
 
     //============================================================================
@@ -2746,7 +602,7 @@ void nSGNS_Initialise()
     //============================================================================
     if (FFTW_Initialised())
     {
-        SGNS.FFTW_Plan_Inverse = FFTW.Plan_DFT_1d(SGNSFFT.FFT.length, FFT_Array.DReal, FFT_Array.DReal, FFTW_BACKWARD, 0x69);
+        SGNS.FFTW_Plan_Inverse = FFTW.Plan_DFT_1d(SGNS.FFT.length, FFT_Array.DReal, FFT_Array.DReal, FFTW_BACKWARD, 0x69);
     }
 
 
@@ -2783,46 +639,57 @@ void nSGNS_Initialise()
     gain_amplitude    = 4.5d;
     gain_power        = 2.0d;
 
-    if ((parameters.shaping.altfilter) && (parameters.shaping.interp_cubic))
+    if (parameters.shaping.hybrid)
     {
-        average_factor    = 0.13d;
+        SGNS.Control.Process_Stored_Results = Process_Stored_Results_Hybrid;
 
-        SGNS.Control.Process_Stored_Results = Process_Stored_Results_Cubic_AltFilter;
+        average_factor    = 1.0d;
 
-        if (parameters.shaping.warp)
+        if (parameters.shaping.interp_cubic)
             SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Cubic;
         else
             SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Default;
     }
     else
-        if (parameters.shaping.interp_cubic)
+        if (parameters.shaping.altfilter)
         {
-            average_factor    = 1.087d;
+            SGNS.Control.Process_Stored_Results = Process_Stored_Results_Cubic_AltFilter;
 
-            SGNS.Control.Process_Stored_Results = Process_Stored_Results_Cubic;
-
-            if (parameters.shaping.warp)
-                SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Cubic;
-            else
-                SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Default;
-        }
-        else
-            if (parameters.shaping.altfilter)
+            if (parameters.shaping.interp_cubic)
             {
-                average_factor    = 0.10515d;
-
-                SGNS.Control.Process_Stored_Results = Process_Stored_Results_AltFilter;
-
-                SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Default;
+                SGNS.Control.Process_Stored_Results = Process_Stored_Results_Cubic_AltFilter;
+                SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Cubic;
+                average_factor    = 0.13d;
             }
             else
             {
-                average_factor    = 1.0d;
+                SGNS.Control.Process_Stored_Results = Process_Stored_Results_AltFilter;
+                SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Default;
+                average_factor    = 0.10515d;
+            }
+        }
+        else
+            if (parameters.shaping.interp_cubic)
+            {
+                SGNS.Control.Process_Stored_Results = Process_Stored_Results_Cubic;
 
+                SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Cubic;
+
+                average_factor    = 1.087d;
+            }
+            else
+            {
                 SGNS.Control.Process_Stored_Results = Process_Stored_Results_Default;
 
                 SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Default;
+
+                average_factor    = 1.0d;
             }
+
+    if (parameters.shaping.average != -99)
+    {
+        average_factor = parameters.shaping.average;
+    }
 
     //============================================================================
     // Zero number of skipped filters.
@@ -2852,14 +719,14 @@ void nSGNS_Initialise()
         SGNS.Filter_Order = parameters.shaping.taps;
     }
 
-    SGNS.Filter_Order = std::min(MAX_FILTER_ORDER, std::min(SGNS.Filter_Order, SGNSFFT.FFT.length - 16));
+    SGNS.Filter_Order = std::min(MAX_FILTER_ORDER, std::min(SGNS.Filter_Order, SGNS.FFT.length - 16));
     SGNS.Filter_Order_M1 = std::max(0, SGNS.Filter_Order - 1);
 
     //============================================================================
     // Set bin range points for "Average Ratio" curve.
     //============================================================================
-    SGNS.Upper_Freq_Bin = nRoundEvenInt32(SGNSFFT.FFT.length * std::min(double(Global.upper_freq_limit) / Global.sample_rate, 46 * OneOver[96]));
-    SGNS.Limit_Freq_Bin = nRoundEvenInt32(SGNSFFT.FFT.length * std::min((HUMAN_FREQ_LIMIT + 2000.0d * Global.Codec_Block.bit_shift) / Global.sample_rate, 46 * OneOver[96]));
+    SGNS.Upper_Freq_Bin = nRoundEvenInt32(SGNS.FFT.length * std::min(double(Global.upper_freq_limit) / Global.sample_rate, 46 * OneOver[96]));
+    SGNS.Limit_Freq_Bin = nRoundEvenInt32(SGNS.FFT.length * std::min((HUMAN_FREQ_LIMIT + 2000.0d * Global.Codec_Block.bit_shift) / Global.sample_rate, 46 * OneOver[96]));
 
     //============================================================================
     // Define "average ratio" curve.
@@ -2883,7 +750,7 @@ void nSGNS_Initialise()
     }
 
     si_j = si_k;
-    si_k = (SGNSFFT.FFT.length_half - (SGNSFFT.FFT.length_half - SGNS.Limit_Freq_Bin) * OneOver[std::max(2, Global.Codec_Block.bit_shift + 2)]);
+    si_k = (SGNS.FFT.length_half - (SGNS.FFT.length_half - SGNS.Limit_Freq_Bin) * OneOver[std::max(2, Global.Codec_Block.bit_shift + 2)]);
 
     for (si_i = si_j; si_i <= si_k; si_i++)
     {
@@ -2891,7 +758,7 @@ void nSGNS_Initialise()
     }
 
     si_j = si_k;
-    si_k = SGNSFFT.FFT.length_half;
+    si_k = SGNS.FFT.length_half;
 
     for (si_i = si_j; si_i <= si_k; si_i++)
     {
@@ -2940,32 +807,25 @@ void nSGNS_Initialise()
 
     double this_total = 0.0d;
 
-    for (si_i = 0; si_i <= SGNSFFT.FFT.length_half; si_i++)
+    for (si_i = 0; si_i <= SGNS.FFT.length_half; si_i++)
     {
-        //====================================================================
-        // Zero stored spectral shapes.
-        //====================================================================
-        SGNSFFT.FFT_results_long[si_i] = 0.0d;
-        SGNSFFT.FFT_results_short[si_i] = 0.0d;
-        //====================================================================
-
         //====================================================================
         // Calculate unwarped and warped frequencies for each bin.
         //====================================================================
-        double this_freq = si_i * SGNSFFT.FFT.length_recip;
+        double this_freq = si_i * SGNS.FFT.length_recip;
         double this_warp = warped_frequency(SGNS.Lambda, this_freq * TwoPi) * OneOverTwoPi;
         //====================================================================
 
-        double warped_frequency_bin = this_warp * SGNSFFT.FFT.length;
+        double warped_frequency_bin = this_warp * SGNS.FFT.length;
 
         SGNS.Warp_Int[si_i] = int(warped_frequency_bin);
 
         SGNS.Warp_Frac[si_i] = warped_frequency_bin - SGNS.Warp_Int[si_i];
         SGNS.Warp_1_M_Frac[si_i] = 1 - SGNS.Warp_Frac[si_i];
 
-        SGNS.Length_Factor[si_i] = std::pow(SGNSFFT.FFT.length_half_recip * si_i, 1.5d);
+        SGNS.Length_Factor[si_i] = std::pow(SGNS.FFT.length_half_recip * si_i, 1.5d);
         SGNS.Length_1_M_Factor[si_i] = 1.0d - SGNS.Length_Factor[si_i];
-        SGNS.Length_Factor[si_i] = SGNS.Length_Factor[si_i] * PowersOf.Two[4];
+        SGNS.Length_Factor[si_i] = SGNS.Length_Factor[si_i] * PowersOf.TwoX[TWO_OFFSET + 4];
 
         //====================================================================
         // Calculate warped-bin-width correction factors
@@ -2975,7 +835,7 @@ void nSGNS_Initialise()
 
         if (warp_bin_delta > 0.0d)
         {
-            SGNS.Warp_Correction[si_i] = SGNSFFT.FFT.length_recip / warp_bin_delta;
+            SGNS.Warp_Correction[si_i] = SGNS.FFT.length_recip / warp_bin_delta;
         }
         else
         {
@@ -3035,15 +895,7 @@ void nSGNS_Initialise()
         this_total += dB_Amplitude_Ratio(this_gain * fixed_noise_shaping_factor);
 
         SGNS.Shape_Total[si_i] = this_total;
-
     }
-
-
-//    if (parameters.shaping.interp_cubic)
-//    {
-//        SGNS.Warp_Correction[0] = (2.0d * (SGNS.Warp_Correction[1] - SGNS.Warp_Correction[2]));
-//        SGNS.Warp_Correction[SGNSFFT.FFT.length_half] = 0.0d;
-//    }
 
 
     for (int32_t ts_i = 0; ts_i < (1 << _factor_lookup_shift); ts_i++)
@@ -3066,7 +918,7 @@ void nSGNS_Initialise()
 
     SGNS.Control.Fill_FFT_With_Warped_Spectrum();
 
-    SGNS.nFFT_plan.NumberOfBitsNeeded = SGNSFFT.FFT.bit_length;
+    SGNS.nFFT_plan.NumberOfBitsNeeded = SGNS.FFT.bit_length;
     SGNS.nFFT_plan.FFT_Array = &FFT_Array;
 
     if (FFTW_Initialised())

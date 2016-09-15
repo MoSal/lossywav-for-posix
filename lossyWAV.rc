@@ -1,6 +1,29 @@
+/**===========================================================================
+
+    lossyWAV: Added noise WAV bit reduction method by David Robinson;
+              Noise shaping coefficients by Sebastian Gesemann;
+
+    Copyright (C) 2007-2016 Nick Currie, Copyleft.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http:www.gnu.org/licenses/>.
+
+    Contact: lossywav <at> hotmail <dot> co <dot> uk
+
+===========================================================================**/
 1 VERSIONINFO
-FILEVERSION     1,4,0,0
-PRODUCTVERSION  1,4,0,0
+FILEVERSION     1,4,2,0
+PRODUCTVERSION  1,4,2,0
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -8,12 +31,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Home Developer"
       VALUE "FileDescription", "lossyWAV: Added noise linear PCM bitdepth reduction method by Dr. D.J.M. Robinson, implemented by Nick Currie using an adaptive noise shaping method by S.Gesemann."
-      VALUE "FileVersion", "1.4.0"
+      VALUE "FileVersion", "1.4.2"
       VALUE "InternalName", "lossyWAV"
       VALUE "LegalCopyright", "Nick Currie"
       VALUE "OriginalFilename", "lossyWAV.exe"
       VALUE "ProductName", "lossyWAV"
-      VALUE "ProductVersion", "1.4.0"
+      VALUE "ProductVersion", "1.4.2"
     END
   END
 

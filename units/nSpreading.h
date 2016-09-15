@@ -1,29 +1,29 @@
-//==============================================================================
-//
-//    lossyWAV: Added noise WAV bit reduction method by David Robinson;
-//              Noise shaping coefficients by Sebastian Gesemann;
-//
-//    Copyright (C) 2007-2013 Nick Currie, Copyleft.
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//    Contact: lossywav <at> hotmail <dot> co <dot> uk
-//
-//==============================================================================
-//    Initial translation to C++ from Delphi
-//    by Tyge Løvset (tycho), Aug. 2012
-//==============================================================================
+/**===========================================================================
+
+    lossyWAV: Added noise WAV bit reduction method by David Robinson;
+              Noise shaping coefficients by Sebastian Gesemann;
+
+    Copyright (C) 2007-2016 Nick Currie, Copyleft.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact: lossywav <at> hotmail <dot> co <dot> uk
+
+==============================================================================
+    Initial translation to C++ from Delphi
+    Copyright (C) Tyge Løvset (tycho), Aug. 2012
+===========================================================================**/
 
 #ifndef nSpreading_h_
 #define nSpreading_h_
@@ -32,7 +32,7 @@
 
 static const int32_t SKEWING_AMPLITUDE = 36;
 static const int32_t SPREADING_STEPS = 8190;
-static const double SPREADING_STEPS_RECIP = 1.0 / SPREADING_STEPS;
+static const double  SPREADING_STEPS_RECIP = 1.0 / SPREADING_STEPS;
 
 static const int32_t THRESHOLD_INDEX_SPREAD = 64;
 static const int32_t THRESHOLD_INDEX_SPREAD_RANGE = 256;
@@ -57,14 +57,14 @@ const unsigned char SPREADING_FUNCTION_ARRAY[PRECALC_ANALYSES + 1][SPREAD_ZONES 
 
 static const double SPREADING_FUNCTION_WIDTHS[PRECALC_ANALYSES + 1] =
 {
-    0.00d, // index 0 not used // TY
-    0.35355339059327376220042218105242451964241796884424d,
-    0.25d,
-    0.17677669529663688110021109052621225982120898442212d,
-    0.25d,
-    0.35355339059327376220042218105242451964241796884424d,
-    0.50d,
-    0.70710678118654752440084436210484903928483593768847d
+    0.000, // index 0 not used // TY
+    sqrt(1./8),
+    0.250, // sqrt(1./16),
+    sqrt(1./32),
+    0.250, // sqrt(1./16),
+    sqrt(1./8),
+    0.500, // sqrt(1./4),
+    sqrt(1./2)
 };
 
 
@@ -124,7 +124,7 @@ extern double Skewing_Gain[(MAX_FFT_LENGTH / 2) + 2];
 
 void Spreading_Function_Alt(int);
 
-void Spreading_Function();
+void Spreading_Function(Results_Type* this_result);
 
 void nSpreading_Init();
 

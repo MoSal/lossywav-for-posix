@@ -1,29 +1,29 @@
-//==============================================================================
-//
-//    lossyWAV: Added noise WAV bit reduction method by David Robinson;
-//              Noise shaping coefficients by Sebastian Gesemann;
-//
-//    Copyright (C) 2007-2013 Nick Currie, Copyleft.
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//    Contact: lossywav <at> hotmail <dot> co <dot> uk
-//
-//==============================================================================
-//    Initial translation to C++ from Delphi
-//    by Tyge Løvset (tycho), Aug. 2012
-//==============================================================================
+/**===========================================================================
+
+    lossyWAV: Added noise WAV bit reduction method by David Robinson;
+              Noise shaping coefficients by Sebastian Gesemann;
+
+    Copyright (C) 2007-2016 Nick Currie, Copyleft.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact: lossywav <at> hotmail <dot> co <dot> uk
+
+==============================================================================
+    Initial translation to C++ from Delphi
+    Copyright (C) Tyge Løvset (tycho), Aug. 2012
+===========================================================================**/
 
 #include <sstream>
 #include <iomanip> // std::hex etc.
@@ -56,7 +56,7 @@ std::ofstream LogOutput;
 
 int ExitCode = 0;
 
-FFT_Data_Rec FFT_PreCalc_Data_Rec[MAX_FFT_BIT_LENGTH + 1] __attribute__ ((aligned(16)));
+FFT_Data_Rec FFT_PreCalc_Data_Rec[MAX_FFT_BIT_LENGTH + 2] __attribute__ ((aligned(16)));
 
 FFT_Array_type FFT_Array __attribute__ ((aligned (16)));
 
@@ -72,14 +72,13 @@ double OneOver[MAX_FFT_LENGTH + 2]    __attribute__ ((aligned(16)));
 
 AudioData_type  AudioData   __attribute__ ((aligned(16)));
 timer_type      timer       __attribute__ ((aligned(16)));
+Current_type    Current     __attribute__ ((aligned(16)));
 Global_type     Global      __attribute__ ((aligned(16)));
 parameters_type parameters  __attribute__ ((aligned(16)));
 settings_type   settings    __attribute__ ((aligned(16)));
 process_type    process     __attribute__ ((aligned(16)));
 results_type    results     __attribute__ ((aligned(16)));
 history_type    history     __attribute__ ((aligned(16)));
-LongDist_type   LongDist    __attribute__ ((aligned(16)));
-SGNSFFT_type    SGNSFFT     __attribute__ ((aligned(16)));
 strings_type    strings     __attribute__ ((aligned(16)));
 version_type    version     __attribute__ ((aligned(16)));
 PowersOf_type   PowersOf    __attribute__ ((aligned(16)));
@@ -87,7 +86,7 @@ Stats_type      Stats       __attribute__ ((aligned(16)));
 
 void lossyWAVError(std::string lwe_string, int32_t lwe_value)
 {
-    if (!parameters.output.silent)
+    if ((!parameters.output.silent) && (lwe_string != ""))
     {
         std::cerr << "%lossyWAV Error%: " << lwe_string << std::endl;
     }
@@ -173,54 +172,52 @@ void date_time_string_make(std::string& tsms, double tsmt)
     tsms = tsms.substr(0,tsms.length()-1);
 }
 
+
 void time_string_make(std::string &tsms, double tsmt)
 {
-    double this_time;
-    int32_t hrs, mins, secs, huns;
+    double factor = 1.0d;
 
-    if (tsmt > 3600)
+    if (tsmt < 3600)
     {
-        this_time = 1.00 * nRoundEvenInt64(tsmt);
-    }
-     else
-    {
-        this_time = 0.01 * nRoundEvenInt64(tsmt * 100);
+        factor = 100.0d;
     }
 
-    secs = int(this_time);
-    huns = (this_time - secs) * 100;
-
-    if (secs > 3600)
+    if (tsmt >= 86400)
     {
-        hrs = int(secs / 3600);
-        secs = secs - (hrs * 3600);
-    }
-    else
-    {
-        hrs = 0;
+        factor = OneOver[60];
     }
 
-    if (secs > 60)
-    {
-        mins = int(secs / 60);
-        secs = secs - (mins * 60);
-    }
-    else
-    {
-        mins = 0;
-    }
+    double this_time = nRoundEvenInt64(tsmt * factor) / factor;
+
+    int32_t secs = int(this_time);
+    int32_t hunds = (this_time - secs) * 100;
+
+    int32_t mins = int(secs * OneOver[60]);
+    secs -= (mins * 60);
+
+    int32_t hours = int(mins * OneOver[60]);
+    mins -= (hours * 60);
+
+    int32_t days = int(hours * OneOver[24]);
+    hours -= days * 24;
 
     std::ostringstream ss;
 
-    if (hrs > 0)
+    if (days > 0)
     {
-        ss << std::setfill('0') << std::setw(2) << hrs << ":" << std::setw(2) << mins << ":" << std::setw(2) << secs;
+        ss << std::setfill('0') << std::setw(2) << days << "d" << std::setw(2) << hours << ":" << std::setw(2) << mins;
     }
     else
     {
-        ss << std::setfill('0') << std::setw(2) << mins << ":" << std::setw(2) << secs << "." << std::setw(2) << huns;
+        if (hours > 0)
+        {
+            ss << std::setfill('0') << std::setw(2) << hours << ":" << std::setw(2) << mins << ":" << std::setw(2) << secs;
+        }
+        else
+        {
+            ss << std::setfill('0') << std::setw(2) << mins << ":" << std::setw(2) << secs << "." << std::setw(2) << hunds;
+        }
     }
-
     tsms = ss.str();
 }
 
@@ -233,22 +230,22 @@ void size_string_make(std::string& ssms, double ssmt)
     if (ssmt > 99999)
     {
         ssmj = int(nlog2(ssmt) * OneOver[10]);
-        ssmi = int(log10(ssmt * PowersOf.Two[-ssmj*10]));
+        ssmi = int(log10(ssmt * PowersOf.TwoX[TWO_OFFSET + -ssmj * 10]));
 
         if (ssmi > 2)
         {
             ssmj ++;
-            ssmi = int(log10(ssmt * PowersOf.Two[-ssmj * 10]));
+            ssmi = int(log10(ssmt * PowersOf.TwoX[TWO_OFFSET + -ssmj * 10]));
         }
 
         ssmi = std::max(0, 3 - ssmi);
-        ssmt = std::floor(ssmt * PowersOf.Two[-ssmj * 10] * PowersOf.Ten[ssmi]) * PowersOf.Ten[- ssmi];
-        ssms = floattostrf(ssmt, ssmi) + size_chars[ssmj-1]+"iB";
+        ssmt = std::floor(ssmt * PowersOf.TwoX[TWO_OFFSET + -ssmj * 10] * PowersOf.TenX[TEN_OFFSET + ssmi]) * PowersOf.TenX[TEN_OFFSET + - ssmi];
+        ssms = NumToStr(ssmt, ssmi) + size_chars[ssmj-1]+"iB";
     }
     else
     {
         ssmi = 0;
-        ssms = floattostrf(ssmt, ssmi) + "B";
+        ssms = NumToStr(ssmt, ssmi) + "B";
     }
 }
 
@@ -277,7 +274,7 @@ void nCore_Init()
     /*with version do*/
     if (version.Build < 27)
     {
-        strings.version_short = IntToStr(version.Major) + '.' +  IntToStr(version.Minor) + '.' +  IntToStr(version.Release);
+        strings.version_short = NumToStr(version.Major) + '.' +  NumToStr(version.Minor) + '.' +  NumToStr(version.Release);
 
         if (version.Build > 0)
         {
@@ -304,21 +301,6 @@ void nCore_Init()
 
     for (nt_j = 0; nt_j < MAX_CHANNELS; nt_j ++)
     {
-        for (nt_i = 0; nt_i <= MAX_HIST_FFT_SHORT_LENGTH / 2 + 1; ++nt_i)
-        {
-            history.WAVE_results[nt_j][nt_i] = 0;
-            history.BTRD_results[nt_j][nt_i] = 0;
-            history.CORR_results[nt_j][nt_i] = 0;
-            history.Last_Results[nt_j][nt_i] = 0;
-        }
-
-        for (nt_i = 0; nt_i <= MAX_FFT_LENGTH_HALF + 1; ++nt_i)
-        {
-            LongDist.WAVE_results[nt_j][nt_i] = 0;
-            LongDist.BTRD_results[nt_j][nt_i] = 0;
-            LongDist.CORR_results[nt_j][nt_i] = 0;
-        }
-
         for (nt_i = 0; nt_i <= 33; ++nt_i)
         {
             Stats.bits_removed[nt_j][nt_i] = 0;
@@ -367,12 +349,12 @@ void nCore_Init()
 
     for (nt_i = -1024; nt_i <= 1023; ++nt_i)
     {
-        PowersOf.Two[nt_i] = std::pow(2.0d, nt_i);
+        PowersOf.TwoX[TWO_OFFSET + nt_i] = ldexp(1, nt_i);
     }
 
     for (nt_i = -308; nt_i <= 307; ++nt_i)
     {
-        PowersOf.Ten[nt_i] = std::pow(10.0d, nt_i);
+         PowersOf.TenX[TEN_OFFSET + nt_i] = std::pow((long double) 10.0d, (long double) nt_i);
     }
 
     OneOver[0] = 1;
@@ -381,4 +363,5 @@ void nCore_Init()
     {
         OneOver[nt_i] = 1.0d / nt_i;
     }
+
 }
