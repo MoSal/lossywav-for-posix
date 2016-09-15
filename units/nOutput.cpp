@@ -1,29 +1,29 @@
-//==============================================================================
-//
-//    lossyWAV: Added noise WAV bit reduction method by David Robinson;
-//              Noise shaping coefficients by Sebastian Gesemann;
-//
-//    Copyright (C) 2007-2013 Nick Currie, Copyleft.
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//    Contact: lossywav <at> hotmail <dot> co <dot> uk
-//
-//==============================================================================
-//    Initial translation to C++ from Delphi
-//    by Tyge Løvset (tycho), Aug. 2012
-//==============================================================================
+/**===========================================================================
+
+    lossyWAV: Added noise WAV bit reduction method by David Robinson;
+              Noise shaping coefficients by Sebastian Gesemann;
+
+    Copyright (C) 2007-2016 Nick Currie, Copyleft.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact: lossywav <at> hotmail <dot> co <dot> uk
+
+==============================================================================
+    Initial translation to C++ from Delphi
+    Copyright (C) Tyge Løvset (tycho), Aug. 2012
+===========================================================================**/
 
 #include <iostream>
 #include <cmath>
@@ -46,7 +46,7 @@
 uint8_t* bit_removal_history;
 
 const char hyphen_string[256] = "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
-const char bits_filled[256]   = "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO000000000000OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO000000000000OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO000000000000OOOOOO";
+const char bits_filled[256]   = "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO";
 const char bits_empty[256]    = "...............................................................................................................................................................................................................................................................";
 const char space_string[256]  = "                                                                                                                                                                                                                                                               ";
 
@@ -550,11 +550,11 @@ void Write_blockdist(std::ostream& ToOutput)
             ToOutput << '|' << std::setw(3) << (nd_i - 1);
         }
 
-        ToOutput << '|' << std::setw(5) << floattostrf(this_DATA_percentage * 100, 1) << "%|";
+        ToOutput << '|' << std::setw(5) << NumToStr(this_DATA_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_wave) << std::string(bits_empty, bar_length - bits_filled_wave) << '|';
-        ToOutput << std::setw(5) << floattostrf(this_BTRD_percentage * 100, 1) << "%|";
+        ToOutput << std::setw(5) << NumToStr(this_BTRD_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_btrd) << std::string(bits_empty, bar_length - bits_filled_btrd) << '|';
-        ToOutput << std::setw(5) << floattostrf(this_CORR_percentage * 100, 1) << "%|";
+        ToOutput << std::setw(5) << NumToStr(this_CORR_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_corr) << std::string(bits_empty, bar_length - bits_filled_corr) << '|' << std::endl;
     }
 
@@ -593,11 +593,11 @@ void Write_blockdist(std::ostream& ToOutput)
             ToOutput << '|' << std::setw(3) << (nd_i - 1);
         }
 
-        ToOutput << '|' << std::setw(5) << floattostrf(this_DATA_percentage * 100, 1) << "%|";
+        ToOutput << '|' << std::setw(5) << NumToStr(this_DATA_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_wave) << std::string(bits_empty, bar_length - bits_filled_wave) << '|';
-        ToOutput << std::setw(5) << floattostrf(this_BTRD_percentage * 100, 1) << "%|";
+        ToOutput << std::setw(5) << NumToStr(this_BTRD_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_btrd) << std::string(bits_empty, bar_length - bits_filled_btrd) << '|';
-        ToOutput << std::setw(5) << floattostrf(this_CORR_percentage * 100, 1) << "%|";
+        ToOutput << std::setw(5) << NumToStr(this_CORR_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_corr) << std::string(bits_empty, bar_length - bits_filled_corr) << '|' << std::endl;
     }
 
@@ -652,11 +652,11 @@ void Write_SampleDist(std::ostream& ToOutput)
             ToOutput << '|' << std::setw(3) << (nd_i - 1);
         }
 
-        ToOutput << '|' << std::setw(5) << floattostrf(this_DATA_percentage * 100, 1) << "%|";
+        ToOutput << '|' << std::setw(5) << NumToStr(this_DATA_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_wave) << std::string(bits_empty, bar_length - bits_filled_wave) << '|';
-        ToOutput << std::setw(5) << floattostrf(this_BTRD_percentage * 100, 1) << "%|";
+        ToOutput << std::setw(5) << NumToStr(this_BTRD_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_btrd) << std::string(bits_empty, bar_length - bits_filled_btrd) << '|';
-        ToOutput << std::setw(5) << floattostrf(this_CORR_percentage * 100, 1) << "%|";
+        ToOutput << std::setw(5) << NumToStr(this_CORR_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_corr) << std::string(bits_empty, bar_length - bits_filled_corr) << '|' << std::endl;
     }
 
@@ -696,11 +696,11 @@ void Write_SampleDist(std::ostream& ToOutput)
             ToOutput << '|' << std::setw(3) << (nd_i - 1);
         }
 
-        ToOutput << '|' << std::setw(5) << floattostrf(this_DATA_percentage * 100, 1) << "%|";
+        ToOutput << '|' << std::setw(5) << NumToStr(this_DATA_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_wave) << std::string(bits_empty, bar_length - bits_filled_wave) << '|';
-        ToOutput << std::setw(5) << floattostrf(this_BTRD_percentage * 100, 1) << "%|";
+        ToOutput << std::setw(5) << NumToStr(this_BTRD_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_btrd) << std::string(bits_empty, bar_length - bits_filled_btrd) << '|';
-        ToOutput << std::setw(5) << floattostrf(this_CORR_percentage * 100, 1) << "%|";
+        ToOutput << std::setw(5) << NumToStr(this_CORR_percentage * 100, 1) << "%|";
         ToOutput << std::string(bits_filled, bits_filled_corr) << std::string(bits_empty, bar_length - bits_filled_corr) << '|' << std::endl;
     }
 
@@ -797,7 +797,7 @@ void Write_Histogram(std::ostream& ToOutput)
 }
 
 
-void Write_FreqDist(std::ostream& ToOutput)
+void Write_FreqDist(std::ostream& ToOutput, int32_t this_analysis_number)
 {
     int32_t nt_i, nt_j;
     double nt_x, nt_m, nt_r;
@@ -829,304 +829,210 @@ void Write_FreqDist(std::ostream& ToOutput)
     nt_m = -log10_2x20 * (Global.bits_per_sample + 1.5 + nlog2(1.5) * 0.50f);
     nt_r = 1.0 / nt_m;
 
-    fr_l = std::max(1, nRoundEvenInt32(double(Global.lower_freq_limit) / Global.sample_rate * history.FFT.length));
-    fr_h = nRoundEvenInt32(double(Global.upper_freq_limit) / Global.sample_rate * history.FFT.length);
-    fr_m = nRoundEvenInt32(20000.0 / Global.sample_rate * history.FFT.length);
+    fr_l = std::max(1, nRoundEvenInt32(double(Global.lower_freq_limit) / Global.sample_rate * settings.analysis[this_analysis_number].FFT.length));
+    fr_h = nRoundEvenInt32(double(Global.upper_freq_limit) / Global.sample_rate * settings.analysis[this_analysis_number].FFT.length);
+    fr_m = nRoundEvenInt32(20000.0 / Global.sample_rate * settings.analysis[this_analysis_number].FFT.length);
 
-    ToOutput << std::endl << "Frequency Analysis of audio data.\n";
 
-    if (parameters.output.postanalyse)
+    if ((settings.analysis[this_analysis_number].active) && ((this_analysis_number == SHORT_ANALYSIS) || (parameters.output.longdist)))
     {
-        Titles[0] = std::string("| Input (dBFS)");
-        Titles[1] = std::string("| Lossy (dBFS)");
-        Titles[2] = std::string("| LWCDF (dBFS)");
-        Header = "";
+        ToOutput << std::endl << "Frequency Analysis of audio data.\n";
 
-        Make_Bars(Display_Width, 4, 7, 3, 8);
-
-        ToOutput << top_bar << std::endl << "| Bin" << Titles[0] << Titles[1] << Titles[2] << "| Delta  |" << std::endl << mid_bar << std::endl;
-
-        for (nt_i = 0; nt_i <= history.FFT.length_half; nt_i ++)
+        if (parameters.output.postanalyse)
         {
-            nt_inp_DATA_val = 0;
-            nt_Out_BTRD_val = 0;
-            nt_Out_CORR_val = 0;
+            Titles[0] = std::string("| Input (dBFS)");
+            Titles[1] = std::string("| Lossy (dBFS)");
+            Titles[2] = std::string("| LWCDF (dBFS)");
+            Header = "";
 
-            for (nt_j = 0; nt_j < Global.Channels; nt_j ++)
+            Make_Bars(Display_Width, 4, 7, 3, 8);
+
+            ToOutput << top_bar << std::endl << "| Bin" << Titles[0] << Titles[1] << Titles[2] << "| Delta  |" << std::endl << mid_bar << std::endl;
+
+            for (nt_i = 0; nt_i <=  (settings.analysis[this_analysis_number].FFT.length/2); nt_i ++)
             {
-                nt_inp_DATA_val = nt_inp_DATA_val + history.WAVE_results[nt_j][nt_i];
-                nt_Out_BTRD_val = nt_Out_BTRD_val + history.BTRD_results[nt_j][nt_i];
-                nt_Out_CORR_val = nt_Out_CORR_val + history.CORR_results[nt_j][nt_i];
+                nt_inp_DATA_val = 0;
+                nt_Out_BTRD_val = 0;
+                nt_Out_CORR_val = 0;
+
+                for (nt_j = 0; nt_j < Global.Channels; nt_j ++)
+                {
+                    nt_inp_DATA_val = nt_inp_DATA_val + results.WAVE[this_analysis_number][nt_j].History[nt_i];
+                    nt_Out_BTRD_val = nt_Out_BTRD_val + results.BTRD[this_analysis_number][nt_j].History[nt_i];
+                    nt_Out_CORR_val = nt_Out_CORR_val + results.CORR[this_analysis_number][nt_j].History[nt_i];
+                }
+
+                nt_inp_DATA_val = std::max(nt_m, log10_2x20 * (nlog2(nt_inp_DATA_val * nt_x) * 0.50f - settings.analysis[this_analysis_number].FFT.bit_length + 3 - Global.bits_per_sample));
+                nt_Out_BTRD_val = std::max(nt_m, log10_2x20 * (nlog2(nt_Out_BTRD_val * nt_x) * 0.50f - settings.analysis[this_analysis_number].FFT.bit_length + 3 - Global.bits_per_sample));
+                nt_Out_CORR_val = std::max(nt_m, log10_2x20 * (nlog2(nt_Out_CORR_val * nt_x) * 0.50f - settings.analysis[this_analysis_number].FFT.bit_length + 3 - Global.bits_per_sample));
+
+                nt_inp_DATA_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_inp_DATA_val * nt_r)));
+                nt_Out_BTRD_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_Out_BTRD_val * nt_r)));
+                nt_Out_CORR_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_Out_CORR_val * nt_r)));
+
+                inp_DATA_string = std::string(bits_filled, nt_inp_DATA_len) + std::string(bits_empty, bar_length - nt_inp_DATA_len);
+                Out_BTRD_String = std::string(bits_filled, nt_Out_BTRD_len) + std::string(bits_empty, bar_length - nt_Out_BTRD_len);
+                Out_CORR_String = std::string(bits_filled, nt_Out_CORR_len) + std::string(bits_empty, bar_length - nt_Out_CORR_len);
+
+                if (nt_i == fr_l)
+                {
+                    BinChar = 'L';
+                }
+                else if (nt_i == fr_h)
+                {
+                    BinChar = 'U';
+                }
+                else if (nt_i == fr_m)
+                {
+                    BinChar = '*';
+                }
+                else
+                {
+                    BinChar = ' ';
+                }
+
+                if (nt_i == 0)
+                {
+                    ToOutput << "| DC ";
+                }
+                else if (nt_i == PowersOf.TwoInt64[settings.analysis[this_analysis_number].FFT.bit_length - 1])
+                {
+                    ToOutput << "|FS/2";
+                }
+                else
+                {
+                    ToOutput << '|' << BinChar << std::setw(3) << nt_i;
+                }
+
+                ToOutput << '|' << std::setw(7) << std::fixed << std::setprecision(2) << nt_inp_DATA_val << '|' << inp_DATA_string << '|'
+                                 << std::setw(7) << std::fixed << std::setprecision(2) << nt_Out_BTRD_val << '|' << Out_BTRD_String << '|'
+                                 << std::setw(7) << std::fixed << std::setprecision(2) << nt_Out_CORR_val << '|' << Out_CORR_String << '|'
+                                 << BinChar << std::setw(7) << std::fixed << std::setprecision(3) << nround10(nt_Out_BTRD_val - nt_inp_DATA_val, 3) << '|' << std::endl;
             }
 
-            nt_inp_DATA_val = std::max(nt_m, log10_2x20 * (nlog2(nt_inp_DATA_val * nt_x) * 0.50f - history.FFT.bit_length + 3 - Global.bits_per_sample));
-            nt_Out_BTRD_val = std::max(nt_m, log10_2x20 * (nlog2(nt_Out_BTRD_val * nt_x) * 0.50f - history.FFT.bit_length + 3 - Global.bits_per_sample));
-            nt_Out_CORR_val = std::max(nt_m, log10_2x20 * (nlog2(nt_Out_CORR_val * nt_x) * 0.50f - history.FFT.bit_length + 3 - Global.bits_per_sample));
-
-            nt_inp_DATA_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_inp_DATA_val * nt_r)));
-            nt_Out_BTRD_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_Out_BTRD_val * nt_r)));
-            nt_Out_CORR_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_Out_CORR_val * nt_r)));
-
-            inp_DATA_string = std::string(bits_filled, nt_inp_DATA_len) + std::string(bits_empty, bar_length - nt_inp_DATA_len);
-            Out_BTRD_String = std::string(bits_filled, nt_Out_BTRD_len) + std::string(bits_empty, bar_length - nt_Out_BTRD_len);
-            Out_CORR_String = std::string(bits_filled, nt_Out_CORR_len) + std::string(bits_empty, bar_length - nt_Out_CORR_len);
-
-            if (nt_i == fr_l)
-            {
-                BinChar = 'L';
-            }
-            else if (nt_i == fr_h)
-            {
-                BinChar = 'U';
-            }
-            else if (nt_i == fr_m)
-            {
-                BinChar = '*';
-            }
-            else
-            {
-                BinChar = ' ';
-            }
-
-            if (nt_i == 0)
-            {
-                ToOutput << "| DC ";
-            }
-            else if (nt_i == PowersOf.TwoInt64[history.FFT.bit_length - 1])
-            {
-                ToOutput << "|FS/2";
-            }
-            else
-            {
-                ToOutput << '|' << BinChar << std::setw(3) << nt_i;
-            }
-
-            ToOutput << '|' << std::setw(7) << std::fixed << std::setprecision(2) << nt_inp_DATA_val << '|' << inp_DATA_string << '|'
-                             << std::setw(7) << std::fixed << std::setprecision(2) << nt_Out_BTRD_val << '|' << Out_BTRD_String << '|'
-                             << std::setw(7) << std::fixed << std::setprecision(2) << nt_Out_CORR_val << '|' << Out_CORR_String << '|'
-                             << BinChar << std::setw(7) << std::fixed << std::setprecision(3) << nround10(nt_Out_BTRD_val - nt_inp_DATA_val, 3) << '|' << std::endl;
+            ToOutput << mid_bar << std::endl;
         }
-
-        ToOutput << mid_bar << std::endl;
-    }
-    else if (Global.Channels != 2)
-    {
-        Titles[0] = "| Input Average (dBFS)";
-        Titles[1] = "";
-        Titles[2] = "";
-        Header = "";
-
-        Make_Bars(Display_Width, 4, 7, 1);
-        ToOutput << top_bar << std::endl << "| Bin" << Titles[0] << std::string("|") << std::endl << mid_bar << std::endl;
-
-        for (nt_i = 0; nt_i <= history.FFT.length_half; nt_i ++)
+        else if (Global.Channels != 2)
         {
-            nt_inp_DATA_val = 0;
+            Titles[0] = "| Input Average (dBFS)";
+            Titles[1] = "";
+            Titles[2] = "";
+            Header = "";
 
-            for (nt_j = 0; nt_j < Global.Channels; nt_j ++)
+            Make_Bars(Display_Width, 4, 7, 1);
+            ToOutput << top_bar << std::endl << "| Bin" << Titles[0] << std::string("|") << std::endl << mid_bar << std::endl;
+
+            for (nt_i = 0; nt_i <= settings.analysis[this_analysis_number].FFT.length/2; nt_i ++)
             {
-                nt_inp_DATA_val = nt_inp_DATA_val + history.WAVE_results[nt_j][nt_i];
+                nt_inp_DATA_val = 0;
+
+                for (nt_j = 0; nt_j < Global.Channels; nt_j ++)
+                {
+                    nt_inp_DATA_val = nt_inp_DATA_val + results.WAVE[this_analysis_number][nt_j].History[nt_i];
+                }
+
+                nt_inp_DATA_val = std::max(nt_m, log10_2x20 * (nlog2(nt_inp_DATA_val * nt_x) * 0.50f - settings.analysis[this_analysis_number].FFT.bit_length + 3 - Global.bits_per_sample));
+                nt_inp_DATA_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_inp_DATA_val * nt_r)));
+                inp_DATA_string = std::string(bits_filled, nt_inp_DATA_len) + std::string(bits_empty, bar_length - nt_inp_DATA_len);
+
+                if (nt_i == fr_l)
+                {
+                    BinChar = 'L';
+                }
+                else if (nt_i == fr_h)
+                {
+                    BinChar = 'U';
+                }
+                else if (nt_i == fr_m)
+                {
+                    BinChar = '*';
+                }
+                else
+                {
+                    BinChar = ' ';
+                }
+
+                if (nt_i == 0)
+                {
+                    ToOutput << "| DC ";
+                }
+                else if (nt_i == PowersOf.TwoInt64[settings.analysis[this_analysis_number].FFT.bit_length - 1])
+                {
+                    ToOutput << "|FS/2";
+                }
+                else
+                {
+                    ToOutput << '|' << BinChar << std::setw(3) << nt_i;
+                }
+
+                ToOutput << '|' << std::setw(7) << std::fixed << std::setprecision(2) << nt_inp_DATA_val << '|' << inp_DATA_string << '|' << std::endl;
             }
 
-            nt_inp_DATA_val = std::max(nt_m, log10_2x20 * (nlog2(nt_inp_DATA_val * nt_x) * 0.50f - history.FFT.bit_length + 3 - Global.bits_per_sample));
-            nt_inp_DATA_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_inp_DATA_val * nt_r)));
-            inp_DATA_string = std::string(bits_filled, nt_inp_DATA_len) + std::string(bits_empty, bar_length - nt_inp_DATA_len);
-
-            if (nt_i == fr_l)
-            {
-                BinChar = 'L';
-            }
-            else if (nt_i == fr_h)
-            {
-                BinChar = 'U';
-            }
-            else if (nt_i == fr_m)
-            {
-                BinChar = '*';
-            }
-            else
-            {
-                BinChar = ' ';
-            }
-
-            if (nt_i == 0)
-            {
-                ToOutput << "| DC ";
-            }
-            else if (nt_i == PowersOf.TwoInt64[history.FFT.bit_length - 1])
-            {
-                ToOutput << "|FS/2";
-            }
-            else
-            {
-                ToOutput << '|' << BinChar << std::setw(3) << nt_i;
-            }
-
-            ToOutput << '|' << std::setw(7) << std::fixed << std::setprecision(2) << nt_inp_DATA_val << '|' << inp_DATA_string << '|' << std::endl;
-        }
-
-        ToOutput << mid_bar << std::endl;
-    }
-    else
-    {
-        Titles[0] = "| Input Average (dBFS) Channel #0";
-        Titles[1] = "| Input Average (dBFS) Channel #1";
-        Titles[2] = "";
-        Header = "";
-
-        Make_Bars(Display_Width, 4, 7, 2);
-        ToOutput << top_bar << std::endl << "| Bin" << Titles[0] << Titles[1] << std::string("|") << std::endl << mid_bar << std::endl;
-
-        for (nt_i = 0; nt_i <= history.FFT.length_half; nt_i ++)
-        {
-            nt_inp_DATA_val = history.WAVE_results[0][nt_i];
-            nt_Out_BTRD_val = history.WAVE_results[1][nt_i];
-            nt_inp_DATA_val = std::max(nt_m, log10_2x20 * (nlog2(nt_inp_DATA_val * nt_x) * 0.50f - history.FFT.bit_length + 3 - Global.bits_per_sample));
-            nt_Out_BTRD_val = std::max(nt_m, log10_2x20 * (nlog2(nt_Out_BTRD_val * nt_x) * 0.50f - history.FFT.bit_length + 3 - Global.bits_per_sample));
-            nt_inp_DATA_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_inp_DATA_val * nt_r)));
-            nt_Out_BTRD_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_Out_BTRD_val * nt_r)));
-            inp_DATA_string = std::string(bits_filled, nt_inp_DATA_len) + std::string(bits_empty, bar_length - nt_inp_DATA_len);
-            Out_BTRD_String = std::string(bits_filled, nt_Out_BTRD_len) + std::string(bits_empty, bar_length - nt_Out_BTRD_len);
-
-            if (nt_i == fr_l)
-            {
-                BinChar = 'L';
-            }
-            else if (nt_i == fr_h)
-            {
-                BinChar = 'U';
-            }
-            else if (nt_i == fr_m)
-            {
-                BinChar = '*';
-            }
-            else
-            {
-                BinChar = ' ';
-            }
-
-            if (nt_i == 0)
-            {
-                ToOutput << "| DC ";
-            }
-            else if (nt_i == PowersOf.TwoInt64[history.FFT.bit_length - 1])
-            {
-                ToOutput << "|FS/2";
-            }
-            else
-            {
-                ToOutput << '|' << BinChar << std::setw(3) << nt_i;
-            }
-
-            ToOutput << '|' << std::setw(7) << std::fixed << std::setprecision(2) << nt_inp_DATA_val << '|' << inp_DATA_string << '|'
-                            << std::setw(7) << std::fixed << std::setprecision(2) << nt_Out_BTRD_val << '|' << Out_BTRD_String << '|' << std::endl;
-        }
-
-        ToOutput << mid_bar << std::endl;
-    }
-
-    ToOutput << "Legend: L = Lower Frequency Calculation Limit (" << std::setw(6) << floattostrf(Global.lower_freq_limit * OneOver[1000], 3) << "kHz);" << std::endl
-             << "        U = Upper Frequency Calculation Limit (" << std::setw(6) << floattostrf(Global.upper_freq_limit * OneOver[1000], 3) << "kHz);" << std::endl
-             << "        * = 20.000kHz\n";
-}
-
-
-void Write_LongDist(std::ostream& ToOutput)
-{
-    int32_t nt_i, nt_j;
-    double nt_x, nt_m, nt_r;
-    int32_t fr_l, fr_h, fr_m;
-    std::string inp_DATA_string;
-    std::string Out_BTRD_String;
-    std::string Out_CORR_String;
-    double nt_inp_DATA_val;
-    double nt_Out_BTRD_val;
-    double nt_Out_CORR_val;
-    int32_t nt_inp_DATA_len;
-    int32_t nt_Out_BTRD_len;
-    int32_t nt_Out_CORR_len;
-    char BinChar;
-
-    nt_x = OneOver[Global.Channels] * Global.blocks_processed_recip;
-    nt_m = -log10_2x20 * (Global.bits_per_sample + nlog2(1.5) * 0.50f);
-    nt_r = 1.0 / nt_m;
-    fr_l = std::max(1, nRoundEvenInt32(double(Global.lower_freq_limit) / Global.sample_rate * LongDist.FFT.length));
-    fr_h = nRoundEvenInt32(double(Global.upper_freq_limit) / Global.sample_rate * LongDist.FFT.length);
-    fr_m = nRoundEvenInt32(20000.0 / Global.sample_rate * LongDist.FFT.length);
-    ToOutput << std::endl << "Frequency Analysis of audio data.\n";
-    Titles[0] = "| Input Average (dBFS)";
-    Titles[1] = "| Lossy Average (dBFS)";
-    Titles[2] = "| LWCDF Average (dBFS)";
-    Header = "";
-
-    Make_Bars(Display_Width, 4, 6, 3, 6);
-    ToOutput << top_bar << std::endl << "| Bin" << Titles[0] << Titles[1] << Titles[2] << "|Change|" << std::endl << mid_bar << std::endl;
-
-    for (nt_i = 0; nt_i <= LongDist.FFT.length_half; nt_i ++)
-    {
-        nt_inp_DATA_val = 0;
-        nt_Out_BTRD_val = 0;
-        nt_Out_CORR_val = 0;
-
-        for (nt_j = 0; nt_j < Global.Channels; nt_j ++)
-        {
-            nt_inp_DATA_val = nt_inp_DATA_val + LongDist.WAVE_results[nt_j][nt_i];
-            nt_Out_BTRD_val = nt_Out_BTRD_val + LongDist.BTRD_results[nt_j][nt_i];
-            nt_Out_CORR_val = nt_Out_CORR_val + LongDist.CORR_results[nt_j][nt_i];
-        }
-
-        nt_inp_DATA_val = std::max(nt_m, log10_2x20 * (nlog2(nt_inp_DATA_val * nt_x) * 0.50f - LongDist.FFT.bit_length + 3 - Global.bits_per_sample));
-        nt_Out_BTRD_val = std::max(nt_m, log10_2x20 * (nlog2(nt_Out_BTRD_val * nt_x) * 0.50f - LongDist.FFT.bit_length + 3 - Global.bits_per_sample));
-        nt_Out_CORR_val = std::max(nt_m, log10_2x20 * (nlog2(nt_Out_CORR_val * nt_x) * 0.50f - LongDist.FFT.bit_length + 3 - Global.bits_per_sample));
-        nt_inp_DATA_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_inp_DATA_val * nt_r)));
-        nt_Out_BTRD_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_Out_BTRD_val * nt_r)));
-        nt_Out_CORR_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_Out_CORR_val * nt_r)));
-        inp_DATA_string = std::string(bits_filled, nt_inp_DATA_len) + std::string(bits_empty, bar_length - nt_inp_DATA_len);
-        Out_BTRD_String = std::string(bits_filled, nt_Out_BTRD_len) + std::string(bits_empty, bar_length - nt_Out_BTRD_len);
-        Out_CORR_String = std::string(bits_filled, nt_Out_CORR_len) + std::string(bits_empty, bar_length - nt_Out_CORR_len);
-
-        if (nt_i == fr_l)
-        {
-            BinChar = 'L';
-        }
-        else if (nt_i == fr_h)
-        {
-            BinChar = 'U';
-        }
-        else if (nt_i == fr_m)
-        {
-            BinChar = '*';
+            ToOutput << mid_bar << std::endl;
         }
         else
         {
-            BinChar = ' ';
+            Titles[0] = "| Input Average (dBFS) Channel #0";
+            Titles[1] = "| Input Average (dBFS) Channel #1";
+            Titles[2] = "";
+            Header = "";
+
+            Make_Bars(Display_Width, 4, 7, 2);
+            ToOutput << top_bar << std::endl << "| Bin" << Titles[0] << Titles[1] << std::string("|") << std::endl << mid_bar << std::endl;
+
+            for (nt_i = 0; nt_i <= settings.analysis[this_analysis_number].FFT.length/2; nt_i ++)
+            {
+                nt_inp_DATA_val = results.WAVE[this_analysis_number][0].History[nt_i];
+                nt_Out_BTRD_val = results.WAVE[this_analysis_number][1].History[nt_i];
+                nt_inp_DATA_val = std::max(nt_m, log10_2x20 * (nlog2(nt_inp_DATA_val * nt_x) * 0.50f - settings.analysis[this_analysis_number].FFT.bit_length + 3 - Global.bits_per_sample));
+                nt_Out_BTRD_val = std::max(nt_m, log10_2x20 * (nlog2(nt_Out_BTRD_val * nt_x) * 0.50f - settings.analysis[this_analysis_number].FFT.bit_length + 3 - Global.bits_per_sample));
+                nt_inp_DATA_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_inp_DATA_val * nt_r)));
+                nt_Out_BTRD_len = bar_length - std::min(bar_length, std::max(0, nRoundEvenInt32(bar_length * nt_Out_BTRD_val * nt_r)));
+                inp_DATA_string = std::string(bits_filled, nt_inp_DATA_len) + std::string(bits_empty, bar_length - nt_inp_DATA_len);
+                Out_BTRD_String = std::string(bits_filled, nt_Out_BTRD_len) + std::string(bits_empty, bar_length - nt_Out_BTRD_len);
+
+                if (nt_i == fr_l)
+                {
+                    BinChar = 'L';
+                }
+                else if (nt_i == fr_h)
+                {
+                    BinChar = 'U';
+                }
+                else if (nt_i == fr_m)
+                {
+                    BinChar = '*';
+                }
+                else
+                {
+                    BinChar = ' ';
+                }
+
+                if (nt_i == 0)
+                {
+                    ToOutput << "| DC ";
+                }
+                else if (nt_i == PowersOf.TwoInt64[settings.analysis[this_analysis_number].FFT.bit_length - 1])
+                {
+                    ToOutput << "|FS/2";
+                }
+                else
+                {
+                    ToOutput << '|' << BinChar << std::setw(3) << nt_i;
+                }
+
+                ToOutput << '|' << std::setw(7) << std::fixed << std::setprecision(2) << nt_inp_DATA_val << '|' << inp_DATA_string << '|'
+                                << std::setw(7) << std::fixed << std::setprecision(2) << nt_Out_BTRD_val << '|' << Out_BTRD_String << '|' << std::endl;
+            }
+
+            ToOutput << mid_bar << std::endl;
         }
 
-        if (nt_i == 0)
-        {
-            ToOutput << "| DC ";
-        }
-        else if (nt_i == PowersOf.TwoInt64[LongDist.FFT.bit_length - 1])
-        {
-            ToOutput << "|FS/2";
-        }
-        else
-        {
-            ToOutput << '|' << BinChar << std::setw(3) << nt_i;
-        }
-
-        ToOutput << '|' << std::setw(6) << std::fixed << std::setprecision(1) << nt_inp_DATA_val << '|' << inp_DATA_string
-                 << '|' << std::setw(6) << std::fixed << std::setprecision(1) << nt_Out_BTRD_val << '|' << Out_BTRD_String
-                 << '|' << std::setw(6) << std::fixed << std::setprecision(1) << nt_Out_CORR_val << '|' << Out_CORR_String
-                 << '|' << BinChar << std::setw(5) << std::fixed << std::setprecision(2) << nround10(nt_Out_BTRD_val - nt_inp_DATA_val, 2) << '|' << std::endl;
+        ToOutput << "Legend: L = Lower Frequency Calculation Limit (" << std::setw(6) << NumToStr(Global.lower_freq_limit * OneOver[1000], 3) << "kHz);" << std::endl
+                 << "        U = Upper Frequency Calculation Limit (" << std::setw(6) << NumToStr(Global.upper_freq_limit * OneOver[1000], 3) << "kHz);" << std::endl
+                 << "        * = 20.000kHz\n";
     }
-
-    ToOutput << mid_bar << std::endl;
-    ToOutput << "Legend: L = Lower Frequency Calculation Limit (" << floattostrf(Global.lower_freq_limit * OneOver[1000], 3) << "kHz);" << std::endl
-             << "        U = Upper Frequency Calculation Limit (" << floattostrf(Global.upper_freq_limit * OneOver[1000], 3) << "kHz);" << std::endl
-             << "        * = 20.000kHz\n";
 }
-
 
 void Write_Min_Bin_Dist(std::ostream& ToOutput)
 {
@@ -1156,25 +1062,25 @@ void Write_Min_Bin_Dist(std::ostream& ToOutput)
 
         for (nt_j = 1; nt_j <= PRECALC_ANALYSES; nt_j ++)
         {
-            if ((settings.FFT_analysis_switches & Global.analysis.length[nt_j]) > 0)
+            if (settings.analysis[nt_j].active)
             {
                 Local_Max = 0;
                 Tot_Old_Percent = 0;
                 Tot_New_Percent = 0;
                 Tot_Alt_Percent = 0;
 
-                for (nt_i = 0; nt_i <= spreading.Bins.Upper[Global.analysis.bits[nt_j]] + 1; nt_i ++)
+                for (nt_i = 0; nt_i <= spreading.Bins.Upper[Current.Analysis.bits[nt_j]] + 1; nt_i ++)
                 {
                     Local_Max = std::max(Local_Max, process.Old_Min_Used_History[nt_j][nt_i] + process.New_Min_Used_History[nt_j][nt_i]);
                 }
 
-                fr_l = spreading.Bins.Lower[Global.analysis.bits[nt_j]];
-                fr_h = spreading.Bins.Upper[Global.analysis.bits[nt_j]];
-                fr_m = nRoundEvenInt32(20000.0 / Global.sample_rate * Global.analysis.length[nt_j]);
-                ToOutput << std::endl << "Spreading Algorithm Results : Minima, FFT Length = " << IntToStr(Global.analysis.length[nt_j])
+                fr_l = spreading.Bins.Lower[Current.Analysis.bits[nt_j]];
+                fr_h = spreading.Bins.Upper[Current.Analysis.bits[nt_j]];
+                fr_m = nRoundEvenInt32(20000.0 / Global.sample_rate * Current.Analysis.length[nt_j]);
+                ToOutput << std::endl << "Spreading Algorithm Results : Minima, FFT Length = " << NumToStr(Current.Analysis.length[nt_j])
                          << std::endl << top_bar << std::endl << "|Bin " << Titles[0] << Titles[1] << Titles[2] << std::string("|") << std::endl << mid_bar << std::endl;
 
-                for (nt_i = 0; nt_i <= spreading.Bins.Upper[Global.analysis.bits[nt_j]] + 1; nt_i ++)
+                for (nt_i = 0; nt_i <= spreading.Bins.Upper[Current.Analysis.bits[nt_j]] + 1; nt_i ++)
                 {
                     if (nt_i == fr_l)
                     {
@@ -1197,7 +1103,7 @@ void Write_Min_Bin_Dist(std::ostream& ToOutput)
                     {
                         ToOutput << "| DC ";
                     }
-                    else if (nt_i == Global.analysis.length[nt_j])
+                    else if (nt_i == Current.Analysis.length[nt_j])
                     {
                         ToOutput << "|FS/2";
                     }
@@ -1247,7 +1153,7 @@ void Write_Min_Bin_Dist(std::ostream& ToOutput)
     ToOutput << std::endl << "|FFT " << Titles[0] << std::string("|") << std::endl << mid_bar << std::endl;
 
     for (nt_j = 1; nt_j <= PRECALC_ANALYSES; nt_j ++)
-        if ((settings.FFT_analysis_switches & Global.analysis.length[nt_j]) > 0)
+        if (settings.analysis[nt_j].active)
         {
             Percent_Used[nt_j] = 0;
 
@@ -1259,7 +1165,7 @@ void Write_Min_Bin_Dist(std::ostream& ToOutput)
             Percent_Used[nt_j] = Percent_Used[nt_j] * Global.blocks_processed_recip * OneOver[Global.Channels] * 100;
             Bar_Full_Len = nRoundEvenInt32(Percent_Used[nt_j] * bar_length * OneOver[100]);
             Old_Bar_Str = std::string(bits_filled, Bar_Full_Len) + std::string(bits_empty, bar_length - Bar_Full_Len);
-            ToOutput << '|' << std::setw(4) << Global.analysis.length[nt_j]
+            ToOutput << '|' << std::setw(4) << Current.Analysis.length[nt_j]
                      << '|' << std::setw(6) << std::fixed << std::setprecision(2) << Percent_Used[nt_j]
                      << "%|" << Old_Bar_Str << '|' << std::endl;
         }
@@ -1300,7 +1206,7 @@ void Write_Min_Bin_Dist(std::ostream& ToOutput)
     ToOutput << std::endl << "|FFT " << Titles[0] << Titles[1] << Titles[2] << "|" << std::endl << mid_bar << std::endl;
 
     for (nt_j = 1; nt_j <= PRECALC_ANALYSES; nt_j ++)
-        if ((settings.FFT_analysis_switches & Global.analysis.length[nt_j]) > 0)
+        if (settings.analysis[nt_j].active)
         {
             Old_Percent = double(process.Old_Min_Used[nt_j]) / process.Analyses_Completed[nt_j] * 100;
             New_Percent = double(process.New_Min_Used[nt_j]) / process.Analyses_Completed[nt_j] * 100;
@@ -1311,7 +1217,7 @@ void Write_Min_Bin_Dist(std::ostream& ToOutput)
             New_Bar_Str = std::string(bits_filled, Bar_Full_Len) + std::string(bits_empty, bar_length - Bar_Full_Len);
             Bar_Full_Len = nRoundEvenInt32(Alt_Percent * bar_length * OneOver[100]);
             Alt_Bar_Str = std::string(bits_filled, Bar_Full_Len) + std::string(bits_empty, bar_length - Bar_Full_Len);
-            ToOutput << '|' << std::setw(4) << Global.analysis.length[nt_j]
+            ToOutput << '|' << std::setw(4) << Current.Analysis.length[nt_j]
                      << '|' << std::fixed << std::setw(6) << std::setprecision(2) << Old_Percent << "%|" << Old_Bar_Str
                      << '|' << std::fixed << std::setw(6) << std::setprecision(2) << New_Percent << "%|" << New_Bar_Str
                      << '|' << std::fixed << std::setw(6) << std::setprecision(2) << Alt_Percent << "%|" << Alt_Bar_Str
@@ -1329,7 +1235,7 @@ void Write_Min_Bin_Dist(std::ostream& ToOutput)
              << std::endl << "|FFT " << Titles[0] << Titles[1] << '|' << std::endl << mid_bar << std::endl;
 
     for (nt_j = 1; nt_j <= PRECALC_ANALYSES; nt_j ++)
-        if ((settings.FFT_analysis_switches & Global.analysis.length[nt_j]) > 0)
+        if (settings.analysis[nt_j].active)
         {
             Old_Percent = double(process.Over_Static[nt_j]) / process.Analyses_Completed[nt_j] * 100;
             New_Percent = double(process.Over_Dynamic[nt_j]) / process.Analyses_Completed[nt_j] * 100;
@@ -1337,7 +1243,7 @@ void Write_Min_Bin_Dist(std::ostream& ToOutput)
             Old_Bar_Str = std::string(bits_filled, Bar_Full_Len) + std::string(bits_empty, bar_length - Bar_Full_Len);
             Bar_Full_Len = nRoundEvenInt32(New_Percent * bar_length * OneOver[100]);
             New_Bar_Str = std::string(bits_filled, Bar_Full_Len) + std::string(bits_empty, bar_length - Bar_Full_Len);
-            ToOutput << '|' << std::setw(4) << Global.analysis.length[nt_j]
+            ToOutput << '|' << std::setw(4) << Current.Analysis.length[nt_j]
                      << '|' << std::fixed << std::setw(6) << std::setprecision(2) << Old_Percent << "%|" << Old_Bar_Str
                      << '|' << std::fixed << std::setw(6) << std::setprecision(2) << New_Percent << "%|" << New_Bar_Str
                      << '|' << std::endl;
@@ -1488,12 +1394,11 @@ void Write_Results(std::ostream& ToOutput)
 
     if (parameters.output.freqdist)
     {
-        Write_FreqDist(ToOutput);
-    }
-
-    if (parameters.output.longdist)
-    {
-        Write_LongDist(ToOutput);
+        for (int32_t this_analysis_number = 1; this_analysis_number < (PRECALC_ANALYSES + 1); this_analysis_number++)
+        {
+            if (settings.analysis[this_analysis_number].active)
+                Write_FreqDist(ToOutput, this_analysis_number);
+        }
     }
 
     if (parameters.output.bitdist)
@@ -1573,7 +1478,6 @@ void write_cleanup()
         open_log_file();
 
         LogOutput << version_string << strings.version_short << lossyWAVHead1
-
                   << "Processed : " << strings.datestamp << std::endl
                   << "Settings  : " << strings.parameter << std::endl
                   << "Filename  : " << WAVFilePrintName() << std::endl
@@ -1596,6 +1500,7 @@ void nOutput_Init()
     int32_t nd_i, nd_j;
 
     for (nd_j = 0; nd_j < MAX_CHANNELS; nd_j ++)
+    {
         for (nd_i = 0; nd_i <= 33; nd_i ++)
         {
             DATA_block_lsb[nd_j][nd_i] = 0;
@@ -1611,10 +1516,11 @@ void nOutput_Init()
             CORR_sample_lsb[nd_j][nd_i] = 0;
             CORR_sample_msb[nd_j][nd_i] = 0;
         }
+    }
 
-        if (parameters.output.width == -1)
-        {
-            parameters.output.width = 79;
-        }
-        Display_Width = parameters.output.width;
+    if (parameters.output.width == -1)
+    {
+        parameters.output.width = 79;
+    }
+    Display_Width = parameters.output.width;
 }

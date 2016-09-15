@@ -1,29 +1,30 @@
-//==============================================================================
-//
-//    lossyWAV: Added noise WAV bit reduction method by David Robinson;
-//              Noise shaping coefficients by Sebastian Gesemann;
-//
-//    Copyright (C) 2007-2013 Nick Currie, Copyleft.
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//    Contact: lossywav <at> hotmail <dot> co <dot> uk
-//
-//==============================================================================
-//    Initial translation to C++ from Delphi
-//    by Tyge Løvset (tycho), Aug. 2012
-//==============================================================================
+/**===========================================================================
+
+    lossyWAV: Added noise WAV bit reduction method by David Robinson;
+              Noise shaping coefficients by Sebastian Gesemann;
+
+    Copyright (C) 2007-2016 Nick Currie, Copyleft.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact: lossywav <at> hotmail <dot> co <dot> uk
+
+==============================================================================
+    Initial translation to C++ from Delphi
+    Copyright (C) Tyge Løvset (tycho), Aug. 2012
+===========================================================================**/
+
 #ifdef _WIN32
     #include <fcntl.h>
 #endif
@@ -366,8 +367,8 @@ struct tRIFF_Rec
 
     uint64_t BytesInBuffer;
 
-    void (* ReadTransfer)(PByte pB, PByte pEndB);
-    void (* WriteTransfer)(MultiChannelCodecBlock& outputcodecblock, PByte pB);
+    void (* ReadTransfer)(unsigned char* pB, unsigned char* pEndB);
+    void (* WriteTransfer)(MultiChannelCodecBlock& outputcodecblock, unsigned char* pB);
 
     uint64_t samplebytesread;
     uint64_t firstsamplesread;
@@ -487,7 +488,7 @@ uint64_t readfrom_stdin(tRIFF_Rec &thisRIFF, void* buffpointer, uint64_t bytesto
         if (bytesthisread == 0)
         {
             ++ thisRIFF.File.Retries;
-            Sleep(PowersOf.Two[std::min(7u, thisRIFF.File.Retries) -11]*1000);
+            Sleep(PowersOf.TwoX[TWO_OFFSET + std::min(7u, thisRIFF.File.Retries) -11]*1000);
         }
         else
         {
@@ -1162,7 +1163,7 @@ bool ReadChunkData(tRIFF_Rec& thisRIFF)
 
         thisRIFF.Chunks.FMT.Header = thisMapRecord->Header;
 
-        if ((thisChunkSize !=0x10) && (thisChunkSize !=0x12) && (thisChunkSize !=0x28))
+        if ((thisChunkSize != 0x10) && (thisChunkSize != 0x12) && (thisChunkSize != 0x28))
         {
             wavIOExitProc("FMT Chunk incorrect size.", 0x12);
         }
@@ -1257,7 +1258,7 @@ bool ReadChunkData(tRIFF_Rec& thisRIFF)
 
         thisRIFF.Chunks.FACT.Header = thisMapRecord->Header;
 
-        if (!thisRIFF.File.Read(thisRIFF, (char*) thisMapRecord->DATA, thisChunkSize) == thisChunkSize)
+        if (!(thisRIFF.File.Read(thisRIFF, (char*) thisMapRecord->DATA, thisChunkSize) == thisChunkSize))
         {
             wavIOExitProc("Error reading 'fact' chunk", 0x12);
         }
@@ -1292,7 +1293,7 @@ bool ReadChunkData(tRIFF_Rec& thisRIFF)
     }
     else
     {
-        if (!thisRIFF.File.Read(thisRIFF, (char*) thisMapRecord->DATA, thisChunkSize) == thisChunkSize)
+        if (!(thisRIFF.File.Read(thisRIFF, (char*) thisMapRecord->DATA, thisChunkSize) == thisChunkSize))
         {
             wavIOExitProc("Error reading '"+std::string(thisMapRecord->Header.ID,4)+"' chunk.", 0x12);
         }
@@ -1504,7 +1505,7 @@ void MergeFiles()
 
     if ((Global.bytes_per_sample < 1) || (Global.bytes_per_sample > 4))
     {
-        lossyWAVError(std::string("Invalid bitdepth: ") + IntToStr(RIFF.BTRD.Chunks.FMT.wBitsPerSample), 0x12);
+        lossyWAVError(std::string("Invalid bitdepth: ") + NumToStr(RIFF.BTRD.Chunks.FMT.wBitsPerSample), 0x12);
     }
 
     if (!RIFF.BTRD.File.Type.WAVE64)
@@ -1642,7 +1643,7 @@ void MergeFiles()
 }
 
 
-void ReadTransfer_One(PByte pB, PByte pEndB)
+void ReadTransfer_One(unsigned char* pB, unsigned char* pEndB)
 {
     int32_t iSample = 0;
 
@@ -1659,7 +1660,7 @@ void ReadTransfer_One(PByte pB, PByte pEndB)
 }
 
 
-void ReadTransfer_Two(PByte pB, PByte pEndB)
+void ReadTransfer_Two(unsigned char* pB, unsigned char* pEndB)
 {
     int32_t iSample = 0;
 
@@ -1676,7 +1677,7 @@ void ReadTransfer_Two(PByte pB, PByte pEndB)
 }
 
 
-void ReadTransfer_Three(PByte pB, PByte pEndB)
+void ReadTransfer_Three(unsigned char* pB, unsigned char* pEndB)
 {
     int32_t iSample = 0;
     DATA32 this32;
@@ -1698,7 +1699,7 @@ void ReadTransfer_Three(PByte pB, PByte pEndB)
 }
 
 
-void ReadTransfer_Four(PByte pB, PByte pEndB)
+void ReadTransfer_Four(unsigned char* pB, unsigned char* pEndB)
 {
     int32_t iSample = 0;
 
@@ -1717,7 +1718,8 @@ void ReadTransfer_Four(PByte pB, PByte pEndB)
 
 bool readNextNextCodecBlock()
 {
-    PByte pB, pStartB;
+    unsigned char* pB;
+    unsigned char* pStartB;
     uint64_t thisblockreadlength;
 
     AudioData.Size.Next = 0;
@@ -1748,8 +1750,9 @@ bool readNextNextCodecBlock()
         nrOfBlockInBuffNotYetFetched = 1;
     }
 
-    pB = (PByte)(&RIFF.WAVE.Buffer);
+    pB = (unsigned char*)(&RIFF.WAVE.Buffer);
     pB += (nrOfBlockInBuffNotYetFetched - 1) * nrOfByteInOneBlockInBuff;
+
     pStartB = pB; // points to first sample in Block
 
     if (nrOfBlockInBuffNotYetFetched <= nrOfFullBlocksReadIntoInBuff)
@@ -1781,7 +1784,7 @@ bool readNextNextCodecBlock()
 }
 
 
-void WriteTransfer_One(MultiChannelCodecBlock& outputcodecblock, PByte pB)
+void WriteTransfer_One(MultiChannelCodecBlock& outputcodecblock, unsigned char* pB)
 {
     for (int32_t wt_i = 0; wt_i < AudioData.Size.This; ++wt_i)
         for (int32_t wt_j = 0; wt_j < Global.Channels; ++wt_j)
@@ -1792,7 +1795,7 @@ void WriteTransfer_One(MultiChannelCodecBlock& outputcodecblock, PByte pB)
 }
 
 
-void WriteTransfer_Two(MultiChannelCodecBlock& outputcodecblock, PByte pB)
+void WriteTransfer_Two(MultiChannelCodecBlock& outputcodecblock, unsigned char* pB)
 {
     for (int32_t wt_i = 0; wt_i < AudioData.Size.This; ++wt_i)
         for (int32_t wt_j = 0; wt_j < Global.Channels; ++wt_j)
@@ -1803,7 +1806,7 @@ void WriteTransfer_Two(MultiChannelCodecBlock& outputcodecblock, PByte pB)
 }
 
 
-void WriteTransfer_Three(MultiChannelCodecBlock& outputcodecblock, PByte pB)
+void WriteTransfer_Three(MultiChannelCodecBlock& outputcodecblock, unsigned char* pB)
 {
     DATA32 this32;
 
@@ -1820,7 +1823,7 @@ void WriteTransfer_Three(MultiChannelCodecBlock& outputcodecblock, PByte pB)
 }
 
 
-void WriteTransfer_Four(MultiChannelCodecBlock& outputcodecblock, PByte pB)
+void WriteTransfer_Four(MultiChannelCodecBlock& outputcodecblock, unsigned char* pB)
 {
     for (int32_t wt_i = 0; wt_i < AudioData.Size.This; ++wt_i)
         for (int32_t wt_j = 0; wt_j < Global.Channels; ++wt_j)
@@ -1831,14 +1834,14 @@ void WriteTransfer_Four(MultiChannelCodecBlock& outputcodecblock, PByte pB)
 }
 
 
-static void (* WriteTransferProcs[5])(MultiChannelCodecBlock & outputcodecblock, PByte pB) = {nullptr, WriteTransfer_One, WriteTransfer_Two, WriteTransfer_Three, WriteTransfer_Four};
-static void (* ReadTransferprocs [5])(PByte pB, PByte pEndB)                               = {nullptr, ReadTransfer_One,  ReadTransfer_Two,  ReadTransfer_Three,  ReadTransfer_Four };
+static void (* WriteTransferProcs[5])(MultiChannelCodecBlock & outputcodecblock, unsigned char* pB) = {nullptr, WriteTransfer_One, WriteTransfer_Two, WriteTransfer_Three, WriteTransfer_Four};
+static void (* ReadTransferprocs [5])(unsigned char* pB, unsigned char* pEndB)                               = {nullptr, ReadTransfer_One,  ReadTransfer_Two,  ReadTransfer_Three,  ReadTransfer_Four };
 
 
 bool writeNextCodecBlock(tRIFF_Rec &thisRIFF, MultiChannelCodecBlock& outputcodecblock)
 {
     uint32_t nrOfByteForOutBuff = ((int32_t) Global.bytes_per_sample) * thisRIFF.Chunks.FMT.wChannels * AudioData.Size.This;
-    PByte pB;
+    unsigned char* pB;
 
     if ((thisRIFF.BytesInBuffer + nrOfByteForOutBuff) > BUFFER_SIZEwrite)
     {
@@ -1848,7 +1851,7 @@ bool writeNextCodecBlock(tRIFF_Rec &thisRIFF, MultiChannelCodecBlock& outputcode
         thisRIFF.BytesInBuffer = 0;
     }
 
-    pB = (PByte) &thisRIFF.Buffer; // Check this // TY
+    pB = (unsigned char*) &thisRIFF.Buffer; // Check this // TY
     pB += thisRIFF.BytesInBuffer;
 
     thisRIFF.WriteTransfer(outputcodecblock, pB);
@@ -2029,7 +2032,7 @@ bool openWavIO()
 
     if ((Global.bytes_per_sample < 1) || (Global.bytes_per_sample > 4))
     {
-        lossyWAVError(std::string("Invalid bitdepth: ") + IntToStr(RIFF.BTRD.Chunks.FMT.wBitsPerSample), 0x12);
+        lossyWAVError(std::string("Invalid bitdepth: ") + NumToStr(RIFF.BTRD.Chunks.FMT.wBitsPerSample), 0x12);
     }
 
     RIFF.WAVE.ReadTransfer = ReadTransferprocs[Global.bytes_per_sample];
@@ -2062,20 +2065,20 @@ bool openWavIO()
 
     if (Global.sample_rate < 22050)
     {
-        std::cerr << "Sample Rate too low : " << floattostrf(Global.sample_rate * OneOver[1000], 2) << "kHz (Min=22.05kHz).\n";
+        std::cerr << "Sample Rate too low : " << NumToStr(Global.sample_rate * OneOver[1000], 2) << "kHz (Min=22.05kHz).\n";
         wavIOExitProc("This is not supported.", 0x12);
     }
 
     if (Global.sample_rate > 409600)
     {
-        std::cerr << "Sample Rate too high : " << floattostrf(Global.sample_rate * OneOver[1000], 2) << "kHz (Max=409.6kHz).\n";
+        std::cerr << "Sample Rate too high : " << NumToStr(Global.sample_rate * OneOver[1000], 2) << "kHz (Max=409.6kHz).\n";
         wavIOExitProc("This is not supported.", 0x12);
     }
 
     Global.Codec_Block.duration = OneOver[100];
     Global.Codec_Block.bits = std::max(8, nRoundEvenInt32(nlog2(Global.Codec_Block.duration * Global.sample_rate)));
     Global.Codec_Block.Size = PowersOf.TwoInt64[Global.Codec_Block.bits];
-    Global.Codec_Block.Size_recip = PowersOf.Two[-Global.Codec_Block.bits];
+    Global.Codec_Block.Size_recip = PowersOf.TwoX[TWO_OFFSET + -Global.Codec_Block.bits];
     Global.Codec_Block.bit_shift = Global.Codec_Block.bits - 9;
     Global.Codec_Block.duration = double(Global.Codec_Block.Size) / Global.sample_rate;
 
@@ -2084,7 +2087,7 @@ bool openWavIO()
     //========================================================================
     if (Global.Codec_Block.bits > MAX_FFT_BIT_LENGTH - 1)
     {
-        std::cerr << "Sample Rate too high : " << floattostrf(Global.sample_rate * OneOver[1000], 2) << "kHz (Max=409.6kHz).\n";
+        std::cerr << "Sample Rate too high : " << NumToStr(Global.sample_rate * OneOver[1000], 2) << "kHz (Max=409.6kHz).\n";
         wavIOExitProc("This is not supported.", 0x12);
     }
     //========================================================================
@@ -2092,7 +2095,7 @@ bool openWavIO()
     //========================================================================
     // Pre-calculate variables used in FFT and others.
     //========================================================================
-    for (int32_t this_bit = 1; this_bit <= MAX_FFT_BIT_LENGTH; this_bit++)
+    for (int32_t this_bit = 1; this_bit <= (MAX_FFT_BIT_LENGTH + 1); this_bit++)
     {
         FFT_PreCalc_Data_Rec[this_bit].bit_length = this_bit;
         FFT_PreCalc_Data_Rec[this_bit].bit_shift_from_max = MAX_FFT_BIT_LENGTH - FFT_PreCalc_Data_Rec[this_bit].bit_length;
@@ -2102,12 +2105,12 @@ bool openWavIO()
         FFT_PreCalc_Data_Rec[this_bit].length_m1 = FFT_PreCalc_Data_Rec[this_bit].length - 1;
         FFT_PreCalc_Data_Rec[this_bit].length_half = FFT_PreCalc_Data_Rec[this_bit].length >> 1;
         FFT_PreCalc_Data_Rec[this_bit].length_half_m1 = FFT_PreCalc_Data_Rec[this_bit].length_half - 1;
-        FFT_PreCalc_Data_Rec[this_bit].length_recip = float(PowersOf.Two[- FFT_PreCalc_Data_Rec[this_bit].bit_length]);
+        FFT_PreCalc_Data_Rec[this_bit].length_recip = float(PowersOf.TwoX[TWO_OFFSET + - FFT_PreCalc_Data_Rec[this_bit].bit_length]);
         FFT_PreCalc_Data_Rec[this_bit].length_half_recip = FFT_PreCalc_Data_Rec[this_bit].length_recip * 2;
     }
     //========================================================================
 
-    Global.Codec_Block.Total = (uint64_t)(1.0d * (Global.Total_Samples + Global.Codec_Block.Size - 1) * Global.Channels * Global.Codec_Block.Size_recip);
+    Global.Codec_Block.Total = (uint64_t)(1. * (Global.Total_Samples + Global.Codec_Block.Size - 1.) * Global.Channels * Global.Codec_Block.Size_recip);
 
     if (parameters.ignorechunksizes)
     {
@@ -2199,16 +2202,14 @@ bool openWavIO()
                 std::cerr << "lossyWAV FACT Chunk found. File already processed.\n";
                 std::cerr << RIFF.WAVE.Chunks.FACT.DATA;
             }
-            closeWavIO();
-            throw (0x10);
+            lossyWAVError("", 0x10);
         }
         else
         {
             if ((parameters.output.verbosity) && (!parameters.output.silent))
                 std::cerr << "lossyWAV FACT Chunk not found. File not marked as processed.\n";
 
-            closeWavIO();
-            throw (0x00);
+            lossyWAVError("", 0x00);
         }
     }
     else

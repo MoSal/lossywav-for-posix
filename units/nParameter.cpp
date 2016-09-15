@@ -1,29 +1,29 @@
-//==============================================================================
-//
-//    lossyWAV: Added noise WAV bit reduction method by David Robinson;
-//              Noise shaping coefficients by Sebastian Gesemann;
-//
-//    Copyright (C) 2007-2013 Nick Currie, Copyleft.
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//    Contact: lossywav <at> hotmail <dot> co <dot> uk
-//
-//==============================================================================
-//    Initial translation to C++ from Delphi
-//    by Tyge Løvset (tycho), Aug. 2012
-//==============================================================================
+/**===========================================================================
+
+    lossyWAV: Added noise WAV bit reduction method by David Robinson;
+              Noise shaping coefficients by Sebastian Gesemann;
+
+    Copyright (C) 2007-2016 Nick Currie, Copyleft.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact: lossywav <at> hotmail <dot> co <dot> uk
+
+==============================================================================
+    Initial translation to C++ from Delphi
+    Copyright (C) Tyge Løvset (tycho), Aug. 2012
+===========================================================================**/
 
 #include <cstdlib>
 
@@ -62,7 +62,8 @@ const char lossyWAV_process_description [] =
     "can be changed by specifying a different --limit (in the range 10kHz to 20kHz).\n\n"
     "For many audio signals there is little content at very high frequencies and\n"
     "forcing lossyWAV to keep the added noise level lower than the content at these\n"
-    "frequencies can increase the bitrate dramatically for no perceptible benefit.\n\n"
+    "frequencies can increase the bitrate of the losslessly compressed output\n"
+    "dramatically for no perceptible benefit.\n\n"
     "The noise added by the process is shaped using an adaptive method provided by\n"
     "Sebastian Gesemann. This method, as implemented in lossyWAV, aims to use the\n"
     "signal itself as the basis of the filter used for noise shaping. Adaptive noise\n"
@@ -105,12 +106,20 @@ const char lossyWAV_advanced_help [] =
     "\n"
     "Advanced Quality Options:\n"
     "\n"
+    "-A, --altspread [n]  disables 'old' sperading mechanism in favour of 'new'\n"
+    "                     mechanism (default spreading uses both 'old' and 'new'\n"
+    "                     mechanisms). Takes an optional parameter, n, which relates\n"
+    "                     to the proportion of adjacent bins taken into account when\n"
+    "                     calculating spread average for a particular bin (0<=n<=1;\n"
+    "                     default = 0.768544).\n"
     "-a, --analyses <n>   set number of FFT analysis lengths, (2<=n<=7; default=3,\n"
     "                     i.e. 32, 64 & 1024 samples. n = 2, remove 32 sample FFT;\n"
     "                     n > 3 add 16; n > 4, add 128; n > 5, add 256, n > 6, add\n"
     "                     512) n.b. FFT lengths stated are for 44.1/48kHz audio,\n"
     "                     higher sample rates will automatically increase all FFT\n"
     "                     lengths as required.\n"
+    "-D, --dynamic <n>    select minimum_bits_to_keep_dynamic to n bits (default\n"
+    "                     2.71 at -q X and 5.00 at -q I, 1.0 <= n <= 7.0.\n"
     "    --feedback [n]   enable experimental bit removal / adaptive noise shaping\n"
     "                     noise limiter. Tuning has been carried out at -q X and\n"
     "                     should have a negligible effect at -q S. Optional setting\n"
@@ -119,7 +128,7 @@ const char lossyWAV_advanced_help [] =
     "       r, round <n>  limit deviation from expected added noise due to rounding\n"
     "                     (-2.0 <= n <= 2.0, default = 0.0).\n"
     "       n, noise <n>  limit added noise due to adaptive noise shaping\n"
-    "                     (-2.5 <= n <= 2.5, default = 0.0).\n"
+    "                     (-2.5 <= n <= 7.5, default = 0.0).\n"
     "       a, aclips <n> number of permissible exceedences of adaptive noise\n"
     "                     shaping level limit (0 <= n <= 64, default = 32).\n"
     "       A, alevel <n> adaptive noise shaping level limit (-2.0 <= n <= 2.5,\n"
@@ -128,7 +137,9 @@ const char lossyWAV_advanced_help [] =
     "-I, --ignore-chunk-sizes.\n"
     "                     ignore 'RIFF' and 'data' chunk sizes in input.\n"
     "-l, --limit <n>      set upper frequency limit to be used in analyses to n Hz;\n"
-    "                     (12500 <= n <= 20000; default=16000).\n"
+    "                     (12500 <= n <= 20000*; default=16000).\n"
+    "                     *: for 44.1/48 kHz audio. Upper limit for audio of\n"
+    "                     other sampling rates is limited to sample-rate x 45.35%\n"
     "    --linkchannels   revert to original single bits-to-remove value for all\n"
     "                     channels rather than channel dependent bits-to-remove.\n"
     "    --maxclips <n>   set max. number of acceptable clips per channel per block;\n"
@@ -141,16 +152,24 @@ const char lossyWAV_advanced_help [] =
     "    --scale <n>      factor to scale audio by; (0.03125 < n <= 8.0; default=1).\n"
     "-s, --shaping        modify settings for noise shaping used in bit-removal:\n"
     "       a, altfilter  enable alternative adaptive shaping filter method.\n"
+    "       A, average    set factor of shape modification above upper calculation\n"
+    "                     frequency limit (0.00000 <= n <= 1.00000)\n"
     "       c, cubic      enable cubic interpolation when defining filter shape\n"
     "       e, extra      additional white noise to add during creation of filter\n"
     "       f, fixed      disable adaptive noise shaping (use fixed shaping)\n"
+    "       h, hybrid     enable hybrid alternative to default adaptive noise shaping\n"
+    "                     method. Uses all available calculated analyses to create\n"
+    "                     the desired noise filter shape rather than only those for\n"
+    "                     1.5ms and 20ms FFT analyses.\n"
     "       n, nowarp     disable warped noise shaping (use linear frequency shaping)\n"
     "       o, off        disable noise shaping altogether (use simple rounding)\n"
     "       s, scale <n>  change effectiveness of noise shaping (0 < n <= 2; default\n"
     "                     = 1.0)\n"
-    "       t, taps <n>   select number of taps to use in FIR filter (32 <= n <= 256;\n"
+    "       t, taps <n>   select number of taps to use in FIR filter (8 <= n <= 256;\n"
     "                     default = 64)\n"
     "       w, warp       enable cubic interpolation when creating warped filter\n"
+    "    --static <n>     set minimum-bits-to-keep-static to n bits (default=6;\n"
+    "                     3<=n<=28, limited to bits-per-sample - 3).\n"
     "-U, --underlap <n>   enable underlap mode to increase number of FFT analyses\n"
     "                     performed at each FFT length, (n = 2, 4 or 8, default=2).\n"
     "\n"
@@ -160,9 +179,9 @@ const char lossyWAV_advanced_help [] =
     "    --blockdist      show distribution of lowest / highest significant bit of\n"
     "                     input codec-blocks and bit-removed codec-blocks.\n"
     "-d, --detail         enable per block per channel bits-to-remove data display.\n"
-    "-F, --freqdist       enable frequency analysis display of input data.\n"
+    "-F, --freqdist [all] enable frequency analysis display of input data. Use of \n"
+    "                     'all' parameter displays all calculated analyses.\n"
     "-H, --histogram      show sample value histogram (input, lossy and correction).\n"
-    "    --longdist       show long frequency distribution data (input/lossy/lwcdf).\n"
     "    --perchannel     show selected distribution data per channel.\n"
     "-p, --postanalyse    enable frequency analysis display of output and\n"
     "                     correction data in addition to input data.\n"
@@ -388,16 +407,16 @@ void check_permitted_values(int32_t cpv_var, int32_t cpv_low, int32_t cpv_high) 
 {
     if ((cpv_var < cpv_low) || (cpv_var > cpv_high))
     {
-        lossyWAVError(std::string("Permitted ") + parmError + " values : " + IntToStr(cpv_low) + "<=n<=" + IntToStr(cpv_high), 0x31);
+        lossyWAVError(std::string("Permitted ") + parmError + " values : " + NumToStr(cpv_low) + "<=n<=" + NumToStr(cpv_high), 0x31);
     }
 }
 
 
 void check_permitted_values(double cpv_var, double cpv_low, double cpv_high, int32_t Digits)    /* overload */
 {
-    if ((cpv_var < cpv_low) || (cpv_var > cpv_high))
+    if ((cpv_low > cpv_var) || (cpv_var > cpv_high))
     {
-        lossyWAVError(std::string("Permitted ") + parmError + " values : " + floattostrf(cpv_low, Digits) + "<=n<=" + floattostrf(cpv_high, Digits), 0x31);
+        lossyWAVError(std::string("Permitted ") + parmError + " values : " + NumToStr(cpv_low, Digits) + "<=n<=" + NumToStr(cpv_high, Digits), 0x31);
     }
 }
 
@@ -454,11 +473,11 @@ bool check_parameter()
 
                 if (parameters.quality == int32_t (parameters.quality))
                 {
-                    strings.parameter = std::string("--quality ") + IntToStr(int(parameters.quality));
+                    strings.parameter = std::string("--quality ") + NumToStr(int(parameters.quality));
                 }
                 else
                 {
-                    strings.parameter = std::string("--quality ") + floattostrf(parameters.quality, 4);
+                    strings.parameter = std::string("--quality ") + NumToStr(parameters.quality, 4);
                 }
 
                 return true;
@@ -490,7 +509,8 @@ bool check_parameter()
     {
         parmError = "maximum clips";
 
-        if (parameters.feedback.rclips != -1)
+        if (parameters.feedback.rclips
+            != -1)
         {
             parmerror_multiple_selection();
         }
@@ -682,18 +702,22 @@ bool check_parameter()
 
         parameters.output.freqdist = true;
 
-        return true;
-    }
-
-    if (current_parameter == "--longdist")
-    {
-        if (parameters.output.longdist)
+        if (!NextParameterIsParameterOrEnd())
         {
-            parmError = "long frequency distribution";
-            parmerror_multiple_selection();
-        }
+            if (!GetNextParamStr())
+            {
+                parmerror_no_value_given();
+            }
 
-        parameters.output.longdist = true;
+            if (current_parameter == "all")
+            {
+                parameters.output.longdist = true;
+            }
+            else
+            {
+                parmerror_val_error();
+            }
+        }
 
         return true;
     }
@@ -739,9 +763,10 @@ bool check_parameter()
 
     if ((parmchar() == 'p') || (current_parameter == "--postanalyse"))
     {
+        parmError = "output frequency distribution";
+
         if (parameters.output.postanalyse)
         {
-            parmError = "output frequency distribution";
             parmerror_multiple_selection();
         }
 
@@ -756,7 +781,7 @@ bool check_parameter()
         return true;
     }
 
-    if  (current_parameter == "--altspread")
+    if  ((parmchar() == 'A') || (current_parameter == "--altspread"))
     {
         if (parameters.altspread)
         {
@@ -765,6 +790,21 @@ bool check_parameter()
         }
 
         parameters.altspread = true;
+
+        if (!NextParameterIsParameterOrEnd())
+        {
+            GetNextParamStr();
+
+            if (!StringIsANumber(current_parameter))
+            {
+                parmerror_val_error();
+            }
+
+            parameters.altspread_value = std::atof(current_parameter.c_str());
+
+            parameters.altspread_value = nround10(parameters.altspread_value, 6);
+            check_permitted_values(parameters.altspread_value, 0.000000, 1.000000, 6);
+        }
 
         return true;
     }
@@ -976,7 +1016,7 @@ bool check_parameter()
 
                 parameters.feedback.numeric = nround10(std::atof(current_parameter.c_str()),2);
 
-                check_permitted_values(parameters.feedback.numeric,0.0d,10.0d);
+                check_permitted_values(parameters.feedback.numeric, 0.0d, 10.0d, 2);
 
                 continue;
             }
@@ -1005,7 +1045,7 @@ bool check_parameter()
 
                     parameters.feedback.round = nround10(std::atof(current_parameter.c_str()),3);
 
-                    check_permitted_values(parameters.feedback.round, -2.001d, 2.000d, 3);
+                    check_permitted_values(parameters.feedback.round, -2.000d, 2.000d, 3);
 
                     continue;
                 }
@@ -1039,7 +1079,7 @@ bool check_parameter()
 
                     parameters.feedback.noise = nround10(std::atof(current_parameter.c_str()),3);
 
-                    check_permitted_values(parameters.feedback.noise, -2.501d, 2.500d, 3);
+                    check_permitted_values(parameters.feedback.noise, -2.501d, 7.501d, 3);
 
                     continue;
                 }
@@ -1107,7 +1147,7 @@ bool check_parameter()
 
                     parameters.feedback.alevel = nround10(std::atof(current_parameter.c_str()),3);
 
-                    check_permitted_values(parameters.feedback.alevel, -2.001d, 2.000d, 3);
+                    check_permitted_values(parameters.feedback.alevel, -2.000d, 2.000d, 3);
 
                     continue;
                 }
@@ -1147,6 +1187,38 @@ bool check_parameter()
         do
         {
             GetNextParamStr();
+
+            if ((parmchar_II() == 'h') || (current_parameter == "hybrid"))
+            {
+                if (!parameters.shaping.active)
+                {
+                    parmError = "adaptive shaping off and hybrid noise shaping";
+                    parmerror_mutually_incompatible_selection();
+                }
+
+                if (parameters.shaping.altfilter)
+                {
+                    parmError = "altfilter and hybrid noise shaping";
+                    parmerror_mutually_incompatible_selection();
+                }
+
+                if (parameters.shaping.fixed)
+                {
+                    parmError = "hybrid noise shaping and fixed noise shaping";
+                    parmerror_mutually_incompatible_selection();
+                }
+
+                if (parameters.shaping.hybrid)
+                {
+                    parmError = "hybrid noise shaping";
+                    parmerror_multiple_selection();
+                }
+
+                parameters.shaping.hybrid = true;
+
+                continue;
+            }
+
 
             if ((parmchar_II() == 'c') || (current_parameter == "cubic"))
             {
@@ -1196,10 +1268,16 @@ bool check_parameter()
                     parmerror_mutually_incompatible_selection();
                 }
 
+                if (parameters.shaping.hybrid)
+                {
+                    parmError = "altfilter and hybrid noise shaping";
+                    parmerror_mutually_incompatible_selection();
+                }
+
                 if (parameters.shaping.fixed)
                 {
                     parmError = "altfilter and fixed noise shaping";
-                    parmerror_multiple_selection();
+                    parmerror_mutually_incompatible_selection();
                 }
 
                 if (parameters.shaping.altfilter)
@@ -1279,6 +1357,7 @@ bool check_parameter()
                 continue;
             }
 
+
             if ((parmchar_II() == 's') || (current_parameter == "scale"))
             {
                 if (!parameters.shaping.active)
@@ -1306,7 +1385,40 @@ bool check_parameter()
 
                 parameters.shaping.scale = nround10(parameters.shaping.scale,4);
 
-                check_permitted_values(parameters.shaping.scale,-3,2);
+                check_permitted_values(parameters.shaping.scale,-3,2,4);
+
+                continue;
+            }
+
+
+            if ((parmchar_II() == 'A') || (current_parameter == "average"))
+            {
+                if (!parameters.shaping.active)
+                {
+                    parmError = "noise shaping off and average factor";
+                    parmerror_mutually_incompatible_selection();
+                }
+
+                if (parameters.shaping.average != -99)
+                {
+                    parmError = "average factor";
+                    parmerror_multiple_selection();
+                }
+
+
+                if (NextParameterIsParameterOrEnd())
+                {
+                    parmError = "average factor value";
+                    parmerror_no_value_given();
+                }
+
+                GetNextParamStr();
+
+                parameters.shaping.average = std::atof(current_parameter.c_str());
+
+                parameters.shaping.average = nround10(parameters.shaping.average,6);
+
+                check_permitted_values(parameters.shaping.average,0.0,1.0,6);
 
                 continue;
             }
@@ -1329,7 +1441,7 @@ bool check_parameter()
 
                 parameters.shaping.taps = std::atoi(current_parameter.c_str());
 
-                check_permitted_values(parameters.shaping.taps, 32, 256);
+                check_permitted_values(parameters.shaping.taps, 3, 256);
 
                 continue;
             }
@@ -1370,6 +1482,50 @@ bool check_parameter()
 
         return true;
     }
+
+
+    if ((parmchar() == 'D') || (current_parameter == "--dynamic"))
+    {
+        parmError = "minimum bits to keep (dynamic)";
+
+        if (parameters.dynamic != -1)
+        {
+            parmerror_multiple_selection();
+        }
+
+        if (!GetNextParamStr())
+        {
+            parmerror_no_value_given();
+        }
+
+        parameters.dynamic = nround10(std::atof(current_parameter.c_str()),4);
+
+        check_permitted_values(parameters.dynamic, 1.0d, 7.0d, 4);
+
+        return true;
+    }
+
+    if (current_parameter == "--static")
+    {
+        parmError = "minimum bits to keep (static)";
+
+        if (parameters.Static != -1)
+        {
+            parmerror_multiple_selection();
+        }
+
+        if (!GetNextParamStr())
+        {
+            parmerror_no_value_given();
+        }
+
+        parameters.Static = std::atoi(current_parameter.c_str());
+
+        check_permitted_values(parameters.Static, 3, 28);
+
+        return true;
+    }
+
 
     if (current_parameter == "--scale")
     {
@@ -1419,7 +1575,7 @@ bool check_parameter()
 
         parameters.limit = std::atoi(current_parameter.c_str());
 
-        check_permitted_values(parameters.limit, 12500, HUMAN_FREQ_LIMIT);
+        check_permitted_values(parameters.limit, 12500, 999999);
 
         return true;
     }
@@ -1513,7 +1669,7 @@ bool check_parameter()
 
         parameters.fft.underlap = std::atoi(current_parameter.c_str());
 
-        check_permitted_values(parameters.fft.underlap, 2, 64);
+        check_permitted_values(parameters.fft.underlap, 2, 8);
 
         if ((parameters.fft.underlap & (parameters.fft.underlap - 1)) > 0)
         {
@@ -1542,7 +1698,7 @@ bool getParms()
     parameters.skewing = true;
 
     parameters.altspread = false;
-    parameters.noisecalc = 0;
+    parameters.altspread_value = -1;
 
     parameters.fft.analyses = 3;
     parameters.fft.underlap = 0;
@@ -1559,7 +1715,9 @@ bool getParms()
     parameters.output.logfilename = "";
     parameters.shaping.active = true;
     parameters.shaping.warp = true;
+    parameters.shaping.hybrid = false;
     parameters.shaping.scale = -99;
+    parameters.shaping.average = -99;
     parameters.shaping.fixed = false;
     parameters.shaping.taps = -1;
     parameters.shaping.extra = -1;
@@ -1570,6 +1728,8 @@ bool getParms()
     parameters.feedback.rclips = -1;
     parameters.help = 0;
     parameters.limit = -1;
+    parameters.Static = -1;
+    parameters.dynamic = -1;
 
     parameters.output.perchannel = false;
     parameters.output.bitdist = false;
@@ -1638,7 +1798,7 @@ bool getParms()
     if (parameters.wavName != "")
     {
         size_t found = parameters.wavName.find_last_of("/\\");
-        if (found!=std::string::npos)
+        if (found != std::string::npos)
         {
             parameters.WavInpDir = parameters.wavName.substr(0, found + 1);
             parameters.wavName = parameters.wavName.substr(found + 1);
@@ -1919,23 +2079,21 @@ void nParameter_Init(int32_t argc, char* argv[])
         }
     }
 
-    if (!parameters.merging)
+    if (!parameters.merging == true)
     {
         if ((parameters.STDOUTPUT == false) && (FileExists(lossyOut()) == true))
         {
-            if (parameters.forcing == true)
+            if ((parameters.forcing == true) || (parameters.checking == true))
             {
-/* TY: TODO
-                if ((filegetattr(lossyOut()) & 1) == 1)
+                if (FileIsReadOnly(lossyOut()))
                 {
-                    lossyWAVwarning("Output lossy file is read-only.");
+                    lossyWAVWarning("Output lossy file is read-only.");
 
-                    if (filesetattr(lossyOut(), filegetattr(lossyOut()) & 0xFE) != 0)
+                    if (!SetFileReadWrite(lossyOut()))
                     {
                         lossyWAVError(std::string("Cannot gain write access to ") + lossyOut(), 0x31);
                     }
                 }
-*/
             }
             else
             {
@@ -1945,19 +2103,17 @@ void nParameter_Init(int32_t argc, char* argv[])
 
         if ((parameters.correction) && (FileExists(lwcdfOut()) == true))
         {
-            if (parameters.forcing == true)
+            if ((parameters.forcing == true) || (parameters.checking == true))
             {
-/* TY: TODO
-                if ((filegetattr(lwcdfOut()) & 1) == 1)
+                if (FileIsReadOnly(lwcdfOut()))
                 {
-                    lossyWAVwarning("Output correction file is read-only.");
+                    lossyWAVWarning("Output correction file is read-only.");
 
-                    if (filesetattr(lwcdfOut(), filegetattr(lwcdfOut()) & 0xFE) != 0)
+                    if (!SetFileReadWrite(lwcdfOut()))
                     {
-                        lossyWAVError(std::string("Cannot gain write access to ") + lwcdfOut(), 0x31);
+                        lossyWAVError(std::string("Cannot gain write access to ") + lossyOut(), 0x31);
                     }
                 }
-*/
             }
             else
             {
@@ -2016,6 +2172,6 @@ void nParameter_Init(int32_t argc, char* argv[])
 
 void nParameter_Cleanup()
 {
-    if (bit_removal_history!=nullptr)
+    if (bit_removal_history != nullptr)
         delete[] bit_removal_history;
 }

@@ -1,23 +1,23 @@
-// --------------------------------------------------------------
-//  Delphi interface to the FFTW library -- FFTW Version 3.0.1.
-//  Note that this interface is incomplete. Additional function
-//  interface entries may be added in an anologous manner, see
-//  FFTW for more details.
-//
-//  Last modified 22/DEC/03
-//  Written by Mark G. Beckett (g.beckett@epcc.ed.ac.uk
-// --------------------------------------------------------------
-//  Modified 07/JUN/2009
-//  by Nick Currie (lossyWAV at yahoo dot com)
-//  Now dynamically links rather than statically. Required to
-//  stop program crashing if libFFTW3-3.DLL is not available.
-// --------------------------------------------------------------
-//  Modified 14/APR/2010
-//  by Nick Currie (lossyWAV at hotmail <dot> co <dot> uk
-// --------------------------------------------------------------
-//    Initial translation to C++ from Delphi
-//    by Tyge Løvset (tycho), Aug. 2012
-// --------------------------------------------------------------
+/**------------------------------------------------------------
+  Delphi interface to the FFTW library -- FFTW Version 3.0.1.
+  Note that this interface is incomplete. Additional function
+  interface entries may be added in an anologous manner, see
+  FFTW for more details.
+
+  Last modified 22/DEC/03
+  Written by Mark G. Beckett (g.beckett@epcc.ed.ac.uk
+ --------------------------------------------------------------
+  Modified 07/JUN/2009
+  by Nick Currie (lossyWAV at yahoo dot com)
+  Now dynamically links rather than statically. Required to
+  stop program crashing if libFFTW3-3.DLL is not available.
+ --------------------------------------------------------------
+  Modified 14/APR/2010
+  by Nick Currie (lossyWAV at hotmail <dot> co <dot> uk
+ --------------------------------------------------------------
+    Initial translation to C++ from Delphi
+    Copyright (C) Tyge Løvset (tycho), Aug. 2012
+ -----------------------------------------------------------**/
 
 #include "FFTW_interface.h"
 
