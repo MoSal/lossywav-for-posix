@@ -21,7 +21,6 @@ OBJS = units/fftw_interface.o \
        units/nFFT.o \
        units/nFillFFT.o \
        units/nInitialise.o \
-       units/nMaths.o \
        units/nOutput.o \
        units/nParameter.o \
        units/nProcess.o \
