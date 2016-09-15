@@ -102,6 +102,16 @@ inline bool FileIsReadOnly(const std::string& fileName_in)
     return false;
 }
 
+inline bool SetFileReadWrite(const std::string& fileName_in)
+{
+    struct stat st;
+    if ( stat(fileName_in.c_str(), &st) ) {
+        return false;
+    }
+
+    return !chmod(fileName_in.c_str(), st.st_mode | S_IRUSR | S_IWUSR);
+}
+
 inline bool DirectoryExists(const std::string& dirName_in)
 {
     struct stat st;
