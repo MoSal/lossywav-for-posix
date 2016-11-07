@@ -32,7 +32,7 @@ OBJS = units/fftw_interface.o \
        lossyWAV.o
 
 COMMON_CXXFLAGS = -std=c++11 -O2 -pipe -Wall -Wextra
-COMMON_LDFLAGS = -Wl,-O1,--sort-common,--as-needed
+COMMON_LDFLAGS = -Wl,-O1 -Wl,--sort-common -Wl,--as-needed
 LTO_FLAGS := -flto
 
 OPTIMIZED_CXXFLAGS := -march=native -Ofast
