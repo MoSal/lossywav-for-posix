@@ -228,7 +228,8 @@ inline tDComplex DComplex(double a, double b)
 inline tDComplex complex_exp(double a)
 {
     tDComplex result;
-    sincos(a, &result.Im, &result.Re);
+    result.Im = sin(a);
+    result.Re = cos(a);
     return result;
 }
 
