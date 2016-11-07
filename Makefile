@@ -31,9 +31,7 @@ OBJS = units/fftw_interface.o \
        units/nWav.o \
        lossyWAV.o
 
-CXX := g++ -std=c++11
-
-COMMON_CXXFLAGS = -pipe -Wall -Wextra -O2
+COMMON_CXXFLAGS = -std=c++11 -O2 -pipe -Wall -Wextra
 COMMON_LDFLAGS = -Wl,-O1,--sort-common,--as-needed
 LTO_FLAGS := -flto
 
@@ -60,7 +58,7 @@ prep-fftw: prep
 prep-fftw-optimized: prep-optimized prep-fftw
 
 *.o: ${@:.o=.cpp} $(HEADERS)
-	${CXX} -c ${@:.o=.cpp} -o ${@} ${CXXFLAGS}
+	${CXX:-g++} -c ${@:.o=.cpp} -o ${@} ${CXXFLAGS}
 
 link: $(OBJS)
 	${CXX} ${OBJS} -o lossywav ${LDFLAGS} ${LIBS}
