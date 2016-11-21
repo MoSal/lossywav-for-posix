@@ -2099,7 +2099,7 @@ bool openWavIO()
 
     if (!RIFF.WAVE.File.Type.RIFF64)
     {
-        Global.Total_Samples = uint64_t((1.0d * RIFF.WAVE.Chunks.DATA.Header.Size) / Global.Channels / Global.bytes_per_sample);
+        Global.Total_Samples = uint64_t((1.0 * RIFF.WAVE.Chunks.DATA.Header.Size) / Global.Channels / Global.bytes_per_sample);
 
         Global.WAVE_size = RIFF.WAVE.Chunks.WAV.Header.Size;
 

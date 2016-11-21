@@ -175,11 +175,11 @@ void date_time_string_make(std::string& tsms, double tsmt)
 
 void time_string_make(std::string &tsms, double tsmt)
 {
-    double factor = 1.0d;
+    double factor = 1.0;
 
     if (tsmt < 3600)
     {
-        factor = 100.0d;
+        factor = 100.0;
     }
 
     if (tsmt >= 86400)
@@ -354,14 +354,14 @@ void nCore_Init()
 
     for (nt_i = -308; nt_i <= 307; ++nt_i)
     {
-         PowersOf.TenX[TEN_OFFSET + nt_i] = std::pow((long double) 10.0d, (long double) nt_i);
+         PowersOf.TenX[TEN_OFFSET + nt_i] = std::pow((long double) 10.0, (long double) nt_i);
     }
 
     OneOver[0] = 1;
 
     for (nt_i = 1; nt_i <= MAX_FFT_LENGTH + 1; ++nt_i)
     {
-        OneOver[nt_i] = 1.0d / nt_i;
+        OneOver[nt_i] = 1.0 / nt_i;
     }
 
 }

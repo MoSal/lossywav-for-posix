@@ -31,12 +31,12 @@
 
 inline double Channel_RMS(int32_t this_channel)
 {
-    double Channel_Temp = 0.0d;
+    double Channel_Temp = 0.0;
 
     for (int32_t sc_i = 0; sc_i < AudioData.Size.This; sc_i++)
         Channel_Temp += nsqrd(AudioData.WAVEPTR[THIS_CODEC_BLOCK][this_channel][sc_i].Integers[0]);
 
-    return nlog2(Channel_Temp * Global.Codec_Block.Size_recip) * 0.50d;
+    return nlog2(Channel_Temp * Global.Codec_Block.Size_recip) * 0.50;
 }
 
 void Shift_Codec_Blocks()

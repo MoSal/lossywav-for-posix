@@ -87,10 +87,10 @@ void nCheck_Switches()
     }
     else
     {
-        settings.scaling_factor = 1.0d;
+        settings.scaling_factor = 1.0;
     }
 
-    settings.scaling_factor_inv = 1.0d / settings.scaling_factor;
+    settings.scaling_factor_inv = 1.0 / settings.scaling_factor;
 
     if (parameters.linkchannels || parameters.midside)
     {
@@ -201,7 +201,7 @@ void nCheck_Switches()
         }
         else
         {
-            parameters.feedback.round = numeric_factor_sqrt * (-1.0d);
+            parameters.feedback.round = numeric_factor_sqrt * (-1.0);
         }
 
         if (parameters.feedback.noise != -99)
@@ -210,7 +210,7 @@ void nCheck_Switches()
         }
         else
         {
-            parameters.feedback.noise = numeric_factor_sqrt * (-2.0d) + 1.625d * (parameters.shaping.altfilter);
+            parameters.feedback.noise = numeric_factor_sqrt * (-2.0) + 1.625 * (parameters.shaping.altfilter);
         }
 
         if (parameters.feedback.aclips != -99)
@@ -228,22 +228,22 @@ void nCheck_Switches()
         }
         else
         {
-            parameters.feedback.alevel = numeric_factor_sqrt * (-1.025d)  + 1.375d * (parameters.shaping.altfilter) + 1.50d * (parameters.shaping.hybrid);
+            parameters.feedback.alevel = numeric_factor_sqrt * (-1.025)  + 1.375 * (parameters.shaping.altfilter) + 1.50 * (parameters.shaping.hybrid);
         }
     }
     else
     {
         parameters.feedback.numeric = 0;
-        parameters.feedback.round = 0.0d;
-        parameters.feedback.noise = 0.0d;
+        parameters.feedback.round = 0.0;
+        parameters.feedback.noise = 0.0;
         parameters.feedback.aclips = 32;
-        parameters.feedback.alevel = 0.0d;
+        parameters.feedback.alevel = 0.0;
     }
 
-    parameters.feedback.round += 2.5d;
+    parameters.feedback.round += 2.5;
     parameters.feedback.round *= OneOver[50];
-    parameters.feedback.noise += -3.50d + 0.625d;
-    parameters.feedback.alevel += -3.25d;
+    parameters.feedback.noise += -3.50 + 0.625;
+    parameters.feedback.alevel += -3.25;
 
     if (parameters.midside)
     {
@@ -273,7 +273,7 @@ void nCheck_Switches()
     }
     else
     {
-        parameters.feedback.rclips = QUALITY_CLIPS_PER_CHANNEL[QUALITY_OFFSET + std::min(QUALITY_PRESET_MAX, settings.quality_integer + int32_t(settings.quality_fraction != 0.0d))];
+        parameters.feedback.rclips = QUALITY_CLIPS_PER_CHANNEL[QUALITY_OFFSET + std::min(QUALITY_PRESET_MAX, settings.quality_integer + int32_t(settings.quality_fraction != 0.0))];
     }
 
     if (!parameters.skewing)
@@ -313,13 +313,13 @@ void nInitial_Setup()
 
     if (parameters.limit != -1)
     {
-        Global.upper_freq_limit = std::min(floor(Global.sample_rate * 0.453515), parameters.limit * 1.0d);
+        Global.upper_freq_limit = std::min(floor(Global.sample_rate * 0.453515), parameters.limit * 1.0);
         strings.parameter += " --limit ";
         strings.parameter += NumToStr(Global.upper_freq_limit, 0);
     }
     else
     {
-        Global.upper_freq_limit = std::min(floor(Global.sample_rate * 0.453515), QUALITY_UPPER_CALC_FREQ_LIMIT[QUALITY_OFFSET + settings.quality_integer] * 1.0d);
+        Global.upper_freq_limit = std::min(floor(Global.sample_rate * 0.453515), QUALITY_UPPER_CALC_FREQ_LIMIT[QUALITY_OFFSET + settings.quality_integer] * 1.0);
     }
 
     Frequency_Limits[SPREAD_ZONES + 1] = Global.upper_freq_limit;

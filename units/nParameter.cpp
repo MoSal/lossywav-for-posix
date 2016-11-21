@@ -1033,7 +1033,7 @@ bool check_parameter()
 
                 parameters.feedback.numeric = nround10(std::atof(current_parameter.c_str()),2);
 
-                check_permitted_values(parameters.feedback.numeric, 0.0d, 10.0d, 2);
+                check_permitted_values(parameters.feedback.numeric, 0.0, 10.0, 2);
 
                 continue;
             }
@@ -1062,7 +1062,7 @@ bool check_parameter()
 
                     parameters.feedback.round = nround10(std::atof(current_parameter.c_str()),3);
 
-                    check_permitted_values(parameters.feedback.round, -2.000d, 2.000d, 3);
+                    check_permitted_values(parameters.feedback.round, -2.000, 2.000, 3);
 
                     continue;
                 }
@@ -1096,7 +1096,7 @@ bool check_parameter()
 
                     parameters.feedback.noise = nround10(std::atof(current_parameter.c_str()),3);
 
-                    check_permitted_values(parameters.feedback.noise, -2.501d, 7.501d, 3);
+                    check_permitted_values(parameters.feedback.noise, -2.501, 7.501, 3);
 
                     continue;
                 }
@@ -1164,7 +1164,7 @@ bool check_parameter()
 
                     parameters.feedback.alevel = nround10(std::atof(current_parameter.c_str()),3);
 
-                    check_permitted_values(parameters.feedback.alevel, -2.000d, 2.000d, 3);
+                    check_permitted_values(parameters.feedback.alevel, -2.000, 2.000, 3);
 
                     continue;
                 }
@@ -1487,7 +1487,7 @@ bool check_parameter()
 
                 parameters.shaping.extra = std::atof(current_parameter.c_str());
 
-                check_permitted_values(parameters.shaping.extra, 0.0d, 25.0d,0);
+                check_permitted_values(parameters.shaping.extra, 0.0, 25.0,0);
 
                 continue;
             }
@@ -1517,7 +1517,7 @@ bool check_parameter()
 
         parameters.dynamic = nround10(std::atof(current_parameter.c_str()),4);
 
-        check_permitted_values(parameters.dynamic, 1.0d, 7.0d, 4);
+        check_permitted_values(parameters.dynamic, 1.0, 7.0, 4);
 
         return true;
     }

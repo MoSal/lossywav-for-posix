@@ -150,7 +150,7 @@ void Remove_Bits_Proc_Adaptive_Noise_Shaping_On()
         this_LIMIT_sqr += (this_LIMIT * this_LIMIT);
     }
 
-    this_noise = (0.5d * nlog2(this_WLFE_sqr)) - Global.bits_per_sample;
+    this_noise = (0.5 * nlog2(this_WLFE_sqr)) - Global.bits_per_sample;
 
     this_round = (nlog2(this_LIMIT_sqr) - nlog2(this_DATA_sqr));
 

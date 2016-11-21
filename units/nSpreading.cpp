@@ -153,13 +153,13 @@ void Threshold_Index_Init()
     {
         // Constant below is used to achieve "closest" approximation to empirical noise calculations.
 
-        this_reference_threshold = nlog2(3.0d * OneOver[64])
+        this_reference_threshold = nlog2(3.0 * OneOver[64])
                                  + Global.Codec_Block.bits
-                                 + this_bit_to_remove * 2.0d
+                                 + this_bit_to_remove * 2.0
                                  + nlog2(1 + PowersOf.TwoX[TWO_OFFSET + 1 - this_bit_to_remove * 2])
                                  -0.00182241629983919;  // Empirical constant
 
-        this_reference_threshold *= log10_2x20 * 0.5d * THRESHOLD_INDEX_SPREAD;
+        this_reference_threshold *= log10_2x20 * 0.5 * THRESHOLD_INDEX_SPREAD;
 
         while (last_filled < this_reference_threshold)
         {

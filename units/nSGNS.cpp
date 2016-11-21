@@ -44,10 +44,10 @@ static const float FIXED_GAIN_Freq[37] __attribute__ ((aligned(16))) =
           1048576};
 
 static const float FNS_Gain[37]  __attribute__ ((aligned(16))) =
-{ 15.6000d, 15.5448d, 15.5305d, 15.5126d, 15.4899d, 15.4614d, 15.4255d, 15.3802d, 15.3232d, 15.2515d, 15.1610d, 15.0471d, 14.9034d, 14.7226d, 14.4948d, 14.2076d, 13.8463d, 13.3919d, 12.8226d, 12.1137d, 11.2395d, 10.1635d,  8.8176d,  7.1221d,  4.9766d, 2.1116d, 0.2329d, 1.2827d, 5.4487d, 11.1622d, 16.6788d, 22.2524d, 30.2921d, 60.0341d, 70.0000d, 70.0000d, 70.0000d};
+{ 15.6000, 15.5448, 15.5305, 15.5126, 15.4899, 15.4614, 15.4255, 15.3802, 15.3232, 15.2515, 15.1610, 15.0471, 14.9034, 14.7226, 14.4948, 14.2076, 13.8463, 13.3919, 12.8226, 12.1137, 11.2395, 10.1635,  8.8176,  7.1221,  4.9766, 2.1116, 0.2329, 1.2827, 5.4487, 11.1622, 16.6788, 22.2524, 30.2921, 60.0341, 70.0000, 70.0000, 70.0000};
 
 static const float FNS_Spline[37]  __attribute__ ((aligned(16))) =
-{  0.0000d,  0.0204d, -0.0018d, -0.0024d, -0.0029d, -0.0037d, -0.0047d, -0.0059d, -0.0073d, -0.0094d, -0.0117d, -0.0149d, -0.0185d, -0.0235d, -0.0297d, -0.0371d, -0.0465d, -0.0574d, -0.0698d, -0.0826d, -0.1009d, -0.1350d, -0.1748d, -0.2250d, -0.3598d, 0.4932d, 1.4643d, 1.5581d, 0.7738d, -0.0985d,  0.0285d,  1.2331d, 10.8512d, -9.8881d, -4.9830d,  0.0000d,  0.0000d};
+{  0.0000,  0.0204, -0.0018, -0.0024, -0.0029, -0.0037, -0.0047, -0.0059, -0.0073, -0.0094, -0.0117, -0.0149, -0.0185, -0.0235, -0.0297, -0.0371, -0.0465, -0.0574, -0.0698, -0.0826, -0.1009, -0.1350, -0.1748, -0.2250, -0.3598, 0.4932, 1.4643, 1.5581, 0.7738, -0.0985,  0.0285,  1.2331, 10.8512, -9.8881, -4.9830,  0.0000,  0.0000};
 
 struct SGNS_type
 {
@@ -116,7 +116,7 @@ void Warped_Lattice_Filter_Init(int32_t this_channel)
         count++;
     }
 
-    this_Filter->One_Over_Minus_C = -1.0d / o;
+    this_Filter->One_Over_Minus_C = -1.0 / o;
 }
 
 
@@ -160,12 +160,12 @@ void Warped_Lattice_Filter_Update(int32_t this_channel, double fqe)
 
 void Process_Stored_Results_Cubic_AltFilter()
 {
-    double running_total = 0.0d;
+    double running_total = 0.0;
 
     Results_Type* results_short = &results.WAVE[SHORT_ANALYSIS][Current.Channel];
     Results_Type* results_long  = &results.WAVE[LONG_ANALYSIS][Current.Channel];
 
-    CubicInterp_Rec CI = {0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d};
+    CubicInterp_Rec CI = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     CI.y2 = results_short->SGNSRoot[0];
     CI.y3 = results_short->SGNSRoot[1];
@@ -195,7 +195,7 @@ void Process_Stored_Results_Cubic_AltFilter()
         }
 
         double result_short = CubicInterp(&CI);
-        result_short *= ((result_short >= 0.0d) * (result_short * result_short));
+        result_short *= ((result_short >= 0.0) * (result_short * result_short));
 
         double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (results_long->SGNSUnity[ts_i] * results_long->SGNSRoot[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
 
@@ -208,7 +208,7 @@ void Process_Stored_Results_Cubic_AltFilter()
 
 void Process_Stored_Results_AltFilter()
 {
-    double running_total = 0.0d;
+    double running_total = 0.0;
 
     Results_Type* results_short = &results.WAVE[SHORT_ANALYSIS][Current.Channel];
     Results_Type* results_long  = &results.WAVE[LONG_ANALYSIS][Current.Channel];
@@ -222,7 +222,7 @@ void Process_Stored_Results_AltFilter()
         int32_t short_index = ts_i >> _factor_lookup_shift;
 
         double result_short = (results_short->SGNSRoot[short_index] * SGNS.lo_fact[factor_lookup]) + (results_short->SGNSRoot[short_index + 1] * SGNS.hi_fact[factor_lookup]);
-        result_short *= ((result_short >= 0.0d) * (result_short * result_short));
+        result_short *= ((result_short >= 0.0) * (result_short * result_short));
 
         double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (results_long->SGNSUnity[ts_i] * results_long->SGNSRoot[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
 
@@ -234,12 +234,12 @@ void Process_Stored_Results_AltFilter()
 
 void Process_Stored_Results_Cubic()
 {
-    double running_total = 0.0d;
+    double running_total = 0.0;
 
     Results_Type* results_short = &results.WAVE[SHORT_ANALYSIS][Current.Channel];
     Results_Type* results_long  = &results.WAVE[LONG_ANALYSIS][Current.Channel];
 
-    CubicInterp_Rec CI = {0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d};
+    CubicInterp_Rec CI = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     CI.y3 = results_short->SGNSRoot[1];
     CI.y2 = results_short->SGNSRoot[0];
@@ -269,7 +269,7 @@ void Process_Stored_Results_Cubic()
         }
 
         double result_short = CubicInterp(&CI);
-        result_short *= ((result_short >= 0.0d) * (result_short));
+        result_short *= ((result_short >= 0.0) * (result_short));
 
         double result_combined = nroot((result_short * SGNS.Length_Factor[ts_i]) + (results_long->SGNSUnity[ts_i] * SGNS.Length_1_M_Factor[ts_i])) * SGNS.Gain[ts_i] + parameters.shaping.extra;
 
@@ -281,7 +281,7 @@ void Process_Stored_Results_Cubic()
 
 void Process_Stored_Results_Default()
 {
-    double running_total = 0.0d;
+    double running_total = 0.0;
 
     Results_Type* results_short = &results.WAVE[SHORT_ANALYSIS][Current.Channel];
     Results_Type* results_long  = &results.WAVE[LONG_ANALYSIS][Current.Channel];
@@ -339,14 +339,14 @@ void Process_Stored_Results_Hybrid()
 
                 int32_t index = ts_i >> this_factor_shift;
 
-                SGNS.Shape_Curve[ts_i] += ((this_result->SGNSHybrid[index] * (1.0d - factor)) + (this_result->SGNSHybrid[index + 1] * factor)) * this_analysis;
+                SGNS.Shape_Curve[ts_i] += ((this_result->SGNSHybrid[index] * (1.0 - factor)) + (this_result->SGNSHybrid[index + 1] * factor)) * this_analysis;
             }
         }
     }
 
     double this_divisor = OneOver[analyses_sum];
 
-    double running_total = 0.0d;
+    double running_total = 0.0;
 
     for (int32_t ts_i = 0; ts_i <= SGNS.FFT.length_half; ts_i++)
     {
@@ -481,7 +481,7 @@ double Fill_FFT_With_Warped_Spectrum_Default()
 
 static bool Levinson(Filter_Rec* this_Filter)
 {
-    this_Filter->LD.A[0] = 1.0d;
+    this_Filter->LD.A[0] = 1.0;
 
     this_Filter->e = this_Filter->LD.r[0];
 
@@ -511,7 +511,7 @@ static bool Levinson(Filter_Rec* this_Filter)
 
         this_Filter->k[m - 1] = km;
 
-        this_Filter->e *= (1.0d - km * km);
+        this_Filter->e *= (1.0 - km * km);
     }
 
     this_Filter->Valid = (m == SGNS.Filter_Order);
@@ -578,7 +578,7 @@ double Filter_Error(int32_t this_channel)
 double warped_frequency(double Lambda, double Freq)
 {
     tDComplex y = complex_exp(Freq);
-    tDComplex z = (y + Lambda) / ((y * Lambda) + 1.0d);
+    tDComplex z = (y + Lambda) / ((y * Lambda) + 1.0);
 
     return std::atan2(z.Im, z.Re);
 }
@@ -609,11 +609,11 @@ void nSGNS_Initialise()
     //============================================================================
     // Set shaping factor for fixed noise shaping.
     //============================================================================
-    double fixed_noise_shaping_factor = 1.0d;
+    double fixed_noise_shaping_factor = 1.0;
 
     if (parameters.shaping.scale == -99)
     {
-        parameters.shaping.scale = 1.0d;
+        parameters.shaping.scale = 1.0;
 
         if (parameters.shaping.fixed)
             fixed_noise_shaping_factor = settings.fixed_noise_shaping_factor;
@@ -622,7 +622,7 @@ void nSGNS_Initialise()
         if (parameters.shaping.fixed)
         {
             fixed_noise_shaping_factor = parameters.shaping.scale;
-            parameters.shaping.scale = 1.0d;
+            parameters.shaping.scale = 1.0;
         }
         else
             fixed_noise_shaping_factor = parameters.shaping.scale;
@@ -634,16 +634,16 @@ void nSGNS_Initialise()
     //============================================================================
     SGNS.Use_Average  = true;
 
-    average_power     = 2.0d;
+    average_power     = 2.0;
 
-    gain_amplitude    = 4.5d;
-    gain_power        = 2.0d;
+    gain_amplitude    = 4.5;
+    gain_power        = 2.0;
 
     if (parameters.shaping.hybrid)
     {
         SGNS.Control.Process_Stored_Results = Process_Stored_Results_Hybrid;
 
-        average_factor    = 1.0d;
+        average_factor    = 1.0;
 
         if (parameters.shaping.interp_cubic)
             SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Cubic;
@@ -659,13 +659,13 @@ void nSGNS_Initialise()
             {
                 SGNS.Control.Process_Stored_Results = Process_Stored_Results_Cubic_AltFilter;
                 SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Cubic;
-                average_factor    = 0.13d;
+                average_factor    = 0.13;
             }
             else
             {
                 SGNS.Control.Process_Stored_Results = Process_Stored_Results_AltFilter;
                 SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Default;
-                average_factor    = 0.10515d;
+                average_factor    = 0.10515;
             }
         }
         else
@@ -675,7 +675,7 @@ void nSGNS_Initialise()
 
                 SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Cubic;
 
-                average_factor    = 1.087d;
+                average_factor    = 1.087;
             }
             else
             {
@@ -683,7 +683,7 @@ void nSGNS_Initialise()
 
                 SGNS.Control.Fill_FFT_With_Warped_Spectrum = Fill_FFT_With_Warped_Spectrum_Default;
 
-                average_factor    = 1.0d;
+                average_factor    = 1.0;
             }
 
     if (parameters.shaping.average != -99)
@@ -726,7 +726,7 @@ void nSGNS_Initialise()
     // Set bin range points for "Average Ratio" curve.
     //============================================================================
     SGNS.Upper_Freq_Bin = nRoundEvenInt32(SGNS.FFT.length * std::min(double(Global.upper_freq_limit) / Global.sample_rate, 46 * OneOver[96]));
-    SGNS.Limit_Freq_Bin = nRoundEvenInt32(SGNS.FFT.length * std::min((HUMAN_FREQ_LIMIT + 2000.0d * Global.Codec_Block.bit_shift) / Global.sample_rate, 46 * OneOver[96]));
+    SGNS.Limit_Freq_Bin = nRoundEvenInt32(SGNS.FFT.length * std::min((HUMAN_FREQ_LIMIT + 2000.0 * Global.Codec_Block.bit_shift) / Global.sample_rate, 46 * OneOver[96]));
 
     //============================================================================
     // Define "average ratio" curve.
@@ -738,7 +738,7 @@ void nSGNS_Initialise()
 
     for (si_i = si_j; si_i <= si_k; si_i++)
     {
-        SGNS.Average_Ratio[si_i] = 0.0d;
+        SGNS.Average_Ratio[si_i] = 0.0;
     }
 
     si_j = si_k;
@@ -768,15 +768,15 @@ void nSGNS_Initialise()
     //============================================================================
     // Calculate lambda value to use in frequency warping.
     //============================================================================
-    double this_lambda = 0.0d;
-    double this_freq = 0.0d;
+    double this_lambda = 0.0;
+    double this_freq = 0.0;
 
     if (parameters.shaping.warp)
     {
-        double this_delta = 0.5d;
-        double this_freq_limit = std::min(double(HUMAN_FREQ_LIMIT), Global.sample_rate * 46.0d * OneOver[96]);
-        this_lambda = 1.0d;
-        double this_target = 46.0d * OneOver[96];
+        double this_delta = 0.5;
+        double this_freq_limit = std::min(double(HUMAN_FREQ_LIMIT), Global.sample_rate * 46.0 * OneOver[96]);
+        this_lambda = 1.0;
+        double this_target = 46.0 * OneOver[96];
 
         do
         {
@@ -789,23 +789,23 @@ void nSGNS_Initialise()
 
             if (this_freq > this_freq_limit)
             {
-                this_delta *= 0.50d;
+                this_delta *= 0.50;
                 this_lambda += this_delta;
             }
         }
-        while (!((this_delta < 1e-12d) || (abs(this_freq - Global.upper_freq_limit) < 1e-6d) || (this_lambda >= 1.0d) || (this_lambda < 0.0d) || (this_freq == this_freq_limit)));
+        while (!((this_delta < 1e-12) || (abs(this_freq - Global.upper_freq_limit) < 1e-6) || (this_lambda >= 1.0) || (this_lambda < 0.0) || (this_freq == this_freq_limit)));
     }
 
-    SGNS.Lambda = (std::min(1.0d, std::max(0.0d, this_lambda)));
-    SGNS.OneMinusLambda2 = 1.0d - nsqrd(SGNS.Lambda);
+    SGNS.Lambda = (std::min(1.0, std::max(0.0, this_lambda)));
+    SGNS.OneMinusLambda2 = 1.0 - nsqrd(SGNS.Lambda);
     SGNS.MinusLambda = -SGNS.Lambda;
 
     //============================================================================
     // Calculate lambda value to use in frequency warping.
     //============================================================================
-    double last_warp = 0.0d;
+    double last_warp = 0.0;
 
-    double this_total = 0.0d;
+    double this_total = 0.0;
 
     for (si_i = 0; si_i <= SGNS.FFT.length_half; si_i++)
     {
@@ -823,8 +823,8 @@ void nSGNS_Initialise()
         SGNS.Warp_Frac[si_i] = warped_frequency_bin - SGNS.Warp_Int[si_i];
         SGNS.Warp_1_M_Frac[si_i] = 1 - SGNS.Warp_Frac[si_i];
 
-        SGNS.Length_Factor[si_i] = std::pow(SGNS.FFT.length_half_recip * si_i, 1.5d);
-        SGNS.Length_1_M_Factor[si_i] = 1.0d - SGNS.Length_Factor[si_i];
+        SGNS.Length_Factor[si_i] = std::pow(SGNS.FFT.length_half_recip * si_i, 1.5);
+        SGNS.Length_1_M_Factor[si_i] = 1.0 - SGNS.Length_Factor[si_i];
         SGNS.Length_Factor[si_i] = SGNS.Length_Factor[si_i] * PowersOf.TwoX[TWO_OFFSET + 4];
 
         //====================================================================
@@ -833,13 +833,13 @@ void nSGNS_Initialise()
 
         double warp_bin_delta = this_warp - last_warp;
 
-        if (warp_bin_delta > 0.0d)
+        if (warp_bin_delta > 0.0)
         {
             SGNS.Warp_Correction[si_i] = SGNS.FFT.length_recip / warp_bin_delta;
         }
         else
         {
-            SGNS.Warp_Correction[si_i] = 1.0d;
+            SGNS.Warp_Correction[si_i] = 1.0;
         }
 
         last_warp = this_warp;
@@ -851,19 +851,19 @@ void nSGNS_Initialise()
         //====================================================================
         // Calculate unwarped gain curve to use with adaptive shaping method.
         //====================================================================
-        if (this_frequency <= 16000.0d)
+        if (this_frequency <= 16000.0)
         {
-            this_gain = 0.0d;
+            this_gain = 0.0;
         }
         else
         {
-            if (this_frequency >= 20000.0d)
+            if (this_frequency >= 20000.0)
             {
-                this_gain = 1.0d;
+                this_gain = 1.0;
             }
             else
             {
-                this_gain = npowerx((this_frequency - 16000.0d) * OneOver[4000], gain_power);
+                this_gain = npowerx((this_frequency - 16000.0) * OneOver[4000], gain_power);
             }
 
         }
@@ -882,7 +882,7 @@ void nSGNS_Initialise()
         }
 
         double this_factor = ((this_frequency - FIXED_GAIN_Freq[si_j]) / (FIXED_GAIN_Freq[si_j + 1] - FIXED_GAIN_Freq[si_j]));
-        double this_factor_1_M = 1.0d - this_factor;
+        double this_factor_1_M = 1.0 - this_factor;
         double this_factor_p3m1 = ((this_factor * this_factor * this_factor) - this_factor);
         double this_factor_1_M_p3m1 = ((this_factor_1_M * this_factor_1_M * this_factor_1_M) - this_factor_1_M);
 
@@ -890,7 +890,7 @@ void nSGNS_Initialise()
         this_gain =  (this_factor_1_M * FNS_Gain[si_j]
                      + this_factor * FNS_Gain[si_j+1]
                      + this_factor_1_M_p3m1 * FNS_Spline[si_j]
-                     + this_factor_p3m1 * FNS_Spline[si_j+1]) * 0.5d;
+                     + this_factor_p3m1 * FNS_Spline[si_j+1]) * 0.5;
 
         this_total += dB_Amplitude_Ratio(this_gain * fixed_noise_shaping_factor);
 
@@ -901,7 +901,7 @@ void nSGNS_Initialise()
     for (int32_t ts_i = 0; ts_i < (1 << _factor_lookup_shift); ts_i++)
     {
         double hi_fact = ts_i * OneOver[(1 << _factor_lookup_shift)];
-        double lo_fact = 1.0d - hi_fact;
+        double lo_fact = 1.0 - hi_fact;
 
         SGNS.hi_fact[ts_i] = hi_fact;
         SGNS.lo_fact[ts_i] = lo_fact;

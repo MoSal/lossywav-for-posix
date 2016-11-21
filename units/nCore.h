@@ -92,19 +92,19 @@ enum
 // Many thanks to "http://keisan.casio.com/has10/Free.cgi" for the online high precision calculator.
 //==========================================================================================================
 static const double e              =  exp(1);
-static const double OneOverTwoPi   =  0.25d / acos(0);
-static const double OneOverPi      =  0.5d / acos(0);
+static const double OneOverTwoPi   =  0.25 / acos(0);
+static const double OneOverPi      =  0.5 / acos(0);
 static const double HalfPi         =  acos(0);
 static const double Pi             =  acos(0) * 2;
 static const double TwoPi          =  acos(0) * 4;
 
-static const double OneOverRoot2   =  sqrt(0.5d);
+static const double OneOverRoot2   =  sqrt(0.5);
 static const double RootTwo        =  sqrt(2);
 static const double log2_10        =  log2(10);
 static const double log10_2        =  log10(2);
 static const double log10_2x20     =  log10(2)*20;
 static const double Max_dB         =  pow(10,255/20);
-static const double GoldenRatio    =  sqrt(1.25d)+0.5d; // Golden Ratio
+static const double GoldenRatio    =  sqrt(1.25)+0.5; // Golden Ratio
 static const double HannWindowRMS  =  log2(sqrt(0.375)) * log10(2) * 20;// == RMS of Hann Window x log10(2) x 20.
 
 //==========================================================================================================

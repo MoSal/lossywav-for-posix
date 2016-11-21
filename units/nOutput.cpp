@@ -537,9 +537,9 @@ void Write_blockdist(std::ostream& ToOutput)
             this_CORR_percentage += CORR_block_lsb[nd_j][nd_i] * Global.blocks_processed_recip * OneOver[Global.Channels];
         }
 
-        bits_filled_wave = nRoundEvenInt32(std::min(1.0d,this_DATA_percentage) * bar_length);
-        bits_filled_btrd = nRoundEvenInt32(std::min(1.0d,this_BTRD_percentage) * bar_length);
-        bits_filled_corr = nRoundEvenInt32(std::min(1.0d,this_CORR_percentage) * bar_length);
+        bits_filled_wave = nRoundEvenInt32(std::min(1.0,this_DATA_percentage) * bar_length);
+        bits_filled_btrd = nRoundEvenInt32(std::min(1.0,this_BTRD_percentage) * bar_length);
+        bits_filled_corr = nRoundEvenInt32(std::min(1.0,this_CORR_percentage) * bar_length);
 
         if (nd_i == 0)
         {
@@ -580,9 +580,9 @@ void Write_blockdist(std::ostream& ToOutput)
             this_CORR_percentage += CORR_block_msb[nd_j][nd_i] * Global.blocks_processed_recip * OneOver[Global.Channels];
         }
 
-        bits_filled_wave = nRoundEvenInt32(std::min(1.0d,this_DATA_percentage) * bar_length);
-        bits_filled_btrd = nRoundEvenInt32(std::min(1.0d,this_BTRD_percentage) * bar_length);
-        bits_filled_corr = nRoundEvenInt32(std::min(1.0d,this_CORR_percentage) * bar_length);
+        bits_filled_wave = nRoundEvenInt32(std::min(1.0,this_DATA_percentage) * bar_length);
+        bits_filled_btrd = nRoundEvenInt32(std::min(1.0,this_BTRD_percentage) * bar_length);
+        bits_filled_corr = nRoundEvenInt32(std::min(1.0,this_CORR_percentage) * bar_length);
 
         if (nd_i == 0)
         {
@@ -639,9 +639,9 @@ void Write_SampleDist(std::ostream& ToOutput)
             this_CORR_percentage += CORR_sample_lsb[nd_j][nd_i] * total_samples_processed_recip;
         }
 
-        bits_filled_wave = nRoundEvenInt32(std::min(1.0d,this_DATA_percentage) * bar_length);
-        bits_filled_btrd = nRoundEvenInt32(std::min(1.0d,this_BTRD_percentage) * bar_length);
-        bits_filled_corr = nRoundEvenInt32(std::min(1.0d,this_CORR_percentage) * bar_length);
+        bits_filled_wave = nRoundEvenInt32(std::min(1.0,this_DATA_percentage) * bar_length);
+        bits_filled_btrd = nRoundEvenInt32(std::min(1.0,this_BTRD_percentage) * bar_length);
+        bits_filled_corr = nRoundEvenInt32(std::min(1.0,this_CORR_percentage) * bar_length);
 
         if (nd_i == 0)
         {
@@ -683,9 +683,9 @@ void Write_SampleDist(std::ostream& ToOutput)
             this_CORR_percentage += CORR_sample_msb[nd_j][nd_i] * total_samples_processed_recip;
         }
 
-        bits_filled_wave = nRoundEvenInt32(std::min(1.0d,this_DATA_percentage) * bar_length);
-        bits_filled_btrd = nRoundEvenInt32(std::min(1.0d,this_BTRD_percentage) * bar_length);
-        bits_filled_corr = nRoundEvenInt32(std::min(1.0d,this_CORR_percentage) * bar_length);
+        bits_filled_wave = nRoundEvenInt32(std::min(1.0,this_DATA_percentage) * bar_length);
+        bits_filled_btrd = nRoundEvenInt32(std::min(1.0,this_BTRD_percentage) * bar_length);
+        bits_filled_corr = nRoundEvenInt32(std::min(1.0,this_CORR_percentage) * bar_length);
 
         if (nd_i == 0)
         {
@@ -1317,7 +1317,7 @@ void Write_Results(std::ostream& ToOutput)
 
     bool output_written = false;
 
-    if (bits_lost > 0.0d)
+    if (bits_lost > 0.0)
     {
         ToOutput << std::setw(7) << std::fixed << std::setprecision(4) << bits_lost/*: 7: 4*/ << " bits lost;";
         output_written = true;

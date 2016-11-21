@@ -281,7 +281,7 @@ void Process_This_Codec_Block()
                     Spreading_result -= HannWindowRMS;
                     Spreading_result -= Spreading_result * (Spreading_result < 0);
                     results.this_FFT_result.spreading = Spreading_result;
-                    int32_t this_spreading_index = int(std::min((THRESHOLD_INDEX_SPREAD_RANGE - 1.0d), Spreading_result) * THRESHOLD_INDEX_SPREAD);
+                    int32_t this_spreading_index = int(std::min((THRESHOLD_INDEX_SPREAD_RANGE - 1.0), Spreading_result) * THRESHOLD_INDEX_SPREAD);
                     results.this_FFT_result.btr = spreading.threshold_index[this_spreading_index];
                     results.this_FFT_result.start = this_FFT_plan.Task.block_start - Global.Codec_Block.Size;
                     results.this_FFT_result.analysis = Current.Analysis.number;
