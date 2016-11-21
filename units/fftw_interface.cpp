@@ -26,7 +26,7 @@
 static HMODULE FFTW_DLL_Handle = nullptr;
 static bool FFTW_DLL_Loaded = false;
 
-#elif defined(ENABLE_FFTW)
+#elif defined(HAVE_FFTW3)
 #include <fftw3.h>
 #endif
 
@@ -41,7 +41,7 @@ bool FFTW_Initialised()
 {
 #ifdef _WIN32
     return FFTW_DLL_Loaded && (FFTW_DLL_Handle != nullptr);
-#elif defined(ENABLE_FFTW)
+#elif defined(HAVE_FFTW3)
     return true;
 #else
     return false;
@@ -68,7 +68,7 @@ void Initialise_FFTW_DLL(const char* this_DLL)
     FFTW_DLL_Loaded = Check_Initialised(FFTW) && (FFTW_DLL_Handle != nullptr);
 }
 
-#elif defined(ENABLE_FFTW)
+#elif defined(HAVE_FFTW3)
 
 void Initialise_FFTW_FUNCS()
 {
@@ -96,7 +96,7 @@ bool FFTW_Initialise()
     {
         Initialise_FFTW_DLL((char*) "libfftw3-3_64.dll\0");
     }
-#elif defined(ENABLE_FFTW)
+#elif defined(HAVE_FFTW3)
     Initialise_FFTW_FUNCS();
 #endif
 
@@ -119,7 +119,7 @@ void FFTW_Cleanup()
     {
 #endif
 
-#if defined(_WIN32) || defined(ENABLE_FFTW)
+#if defined(_WIN32) || defined(HAVE_FFTW3)
         for (int32_t fc_i = 1; fc_i != MAX_FFT_BIT_LENGTH; ++fc_i)
         {
             if (FFTW.Plans[fc_i] != nullptr)

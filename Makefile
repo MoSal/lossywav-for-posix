@@ -52,7 +52,7 @@ prep-optimized: prep
 	$(eval override LDFLAGS += ${LTO_FLAGS})
 
 prep-fftw: prep
-	$(eval override CXXFLAGS += -DENABLE_FFTW)
+	$(eval override CXXFLAGS += -DHAVE_FFTW3)
 	$(eval override LIBS += -lfftw3)
 
 prep-fftw-optimized: prep-optimized prep-fftw
