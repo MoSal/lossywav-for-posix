@@ -32,6 +32,7 @@ OBJS = units/fftw_interface.o \
        lossyWAV.o
 
 COMMON_CXXFLAGS = -std=c++11 -O2 -pipe -Wall -Wextra
+DEFINES = -DHAVE_STD_CHRONO_STEADY_CLOCK_NOW
 COMMON_LDFLAGS = -Wl,-O1 -Wl,--sort-common -Wl,--as-needed
 LTO_FLAGS := -flto
 
@@ -43,7 +44,7 @@ fftw: prep-fftw $(OBJS) link
 fftw-optimized: prep-fftw-optimized $(OBJS) link
 
 prep:
-	$(eval override CXXFLAGS = ${COMMON_CXXFLAGS} ${CXXFLAGS})
+	$(eval override CXXFLAGS = ${COMMON_CXXFLAGS} ${CXXFLAGS} ${DEFINES})
 	$(eval override LDFLAGS = ${COMMON_LDFLAGS} ${LDFLAGS})
 	$(eval override LIBS = ${COMMON_LIBS} ${LIBS})
 

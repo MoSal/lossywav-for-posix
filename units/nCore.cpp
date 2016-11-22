@@ -34,7 +34,7 @@
 #include "nCore.h"
 #include "nMaths.h"
 
-#ifndef _WIN32
+#if !defined(_WIN32) && defined(HAVE_STD_CHRONO_STEADY_CLOCK_NOW)
 
 void QueryPerformanceCounter(std::chrono::steady_clock::time_point *t)
 {
@@ -118,9 +118,10 @@ void gettimer()
     QueryPerformanceCounter(&timer.Stop);
 #ifdef _WIN32
     timer.Elapsed = (timer.Stop64 - timer.Start64) * timer.Period;
-#else
+#elif defined (HAVE_STD_CHRONO_STEADY_CLOCK_NOW)
     timer.Elapsed = GetTimeElapsed(&timer.Stop, &timer.Start);
-
+#else
+#error Neither Windows API nor std::chrono seems to be available.
 #endif
 
     if (timer.Elapsed != 0)

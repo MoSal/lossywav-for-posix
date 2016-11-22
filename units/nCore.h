@@ -31,8 +31,10 @@
 
 #ifdef _WIN32
 #include <windows.h> // For now...
-#else
+#elif defined (HAVE_STD_CHRONO_STEADY_CLOCK_NOW)
 #include <chrono>
+#else
+#error Neither Windows API nor std::chrono seems to be available.
 #endif
 
 #include <cmath>
@@ -306,7 +308,7 @@ extern double OneOver[MAX_FFT_LENGTH + 2]     __attribute__ ((aligned(16)));
 // Global variables used by the Units.
 //============================================================================
 
-#ifndef _WIN32
+#if !defined(_WIN32) && defined(HAVE_STD_CHRONO_STEADY_CLOCK_NOW)
 
 extern struct timer_type
 {
@@ -316,7 +318,7 @@ extern struct timer_type
     std::chrono::steady_clock::time_point Stop;
 } timer     __attribute__ ((aligned(16)));
 
-#else
+#elif defined(_WIN32)
 
 extern struct timer_type
 {
@@ -339,7 +341,8 @@ extern struct timer_type
     double Elapsed;
     time_t StartTime;
 } timer     __attribute__ ((aligned(16)));
-
+#else
+#error Neither Windows API nor std::chrono seems to be available.
 #endif
 
 extern struct Current_type
