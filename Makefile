@@ -32,7 +32,7 @@ OBJS = units/fftw_interface.o \
        lossyWAV.o
 
 COMMON_CXXFLAGS = -std=c++11 -O2 -pipe -Wall -Wextra
-DEFINES = -DHAVE_STD_CHRONO_STEADY_CLOCK_NOW
+DEFINES = -DHAVE_STD_CHRONO_STEADY_CLOCK_NOW -DHAVE_SETPRIORITY
 COMMON_LDFLAGS = -Wl,-O1 -Wl,--sort-common -Wl,--as-needed
 LTO_FLAGS := -flto
 

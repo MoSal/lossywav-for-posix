@@ -25,8 +25,10 @@
     Copyright (C) Tyge Løvset (tycho), Aug. 2012
 ===========================================================================**/
 
-#ifndef _WIN32
+#if !defined(_WIN32) && defined(HAVE_SETPRIORITY)
 #include <sys/resource.h> // setpriority()
+#elif !defined(_WIN32)
+#error Neither Windows API nor POSIX setpriority() seems to be available.
 #endif
 
 #include <cstdlib>
@@ -574,8 +576,10 @@ bool check_parameter()
         }
 #ifdef _WIN32
         setpriority(BELOW_NORMAL_PRIORITY_CLASS);
-#else
+#elif defined(HAVE_SETPRIORITY)
         setpriority(PRIO_PROCESS, 0, 10);
+#else
+#error Neither Windows API nor POSIX setpriority() seems to be available.
 #endif
         parameters.priority = 1;
 
@@ -594,8 +598,10 @@ bool check_parameter()
         parameters.priority = 2;
 #ifdef _WIN32
         setpriority(IDLE_PRIORITY_CLASS);
-#else
+#elif defined(HAVE_SETPRIORITY)
         setpriority(PRIO_PROCESS, 0, 19); // Not IDLE, but avoids Linuxisms.
+#else
+#error Neither Windows API nor POSIX setpriority() seems to be available.
 #endif
 
         return true;
