@@ -34,8 +34,10 @@
 #include <iostream>
 #include <fstream>
 
-#ifndef _WIN32
-#include <sys/stat.h> // stat()
+#if !defined(_WIN32) && defined(HAVE_STAT) && defined(HAVE_CHMOD)
+#include <sys/stat.h>
+#elif !defined(_WIN32)
+#error Neither Windows API nor stat()/chmod() seems to be available.
 #endif
 
 // DELPHI EMULATION
@@ -89,7 +91,7 @@ inline bool DirectoryExists(const std::string& dirName_in)
     return (!(fAttrib == INVALID_FILE_ATTRIBUTES) && (fAttrib && FILE_ATTRIBUTE_DIRECTORY > 0));
 }
 
-#else
+#elif defined(HAVE_STAT) && defined(HAVE_CHMOD)
 
 inline bool FileIsReadOnly(const std::string& fileName_in)
 {
@@ -121,6 +123,8 @@ inline bool DirectoryExists(const std::string& dirName_in)
     return S_ISDIR(st.st_mode);
 }
 
+#else
+#error Neither Windows API nor stat()/chmod() seems to be available.
 #endif
 
 inline bool FileExists(std::string file_name)
