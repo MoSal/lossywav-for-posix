@@ -45,6 +45,7 @@
 #define GetLastError() errno
 #define ERROR_BROKEN_PIPE EPIPE
 
+#ifdef HAVE_NANOSLEEP
 #include <ctime>
 
 int Sleep(double interval)
@@ -55,6 +56,9 @@ int Sleep(double interval)
     tm.tv_nsec = (interval - tm.tv_sec)*1000*1000*1000;
     return nanosleep(&tm, NULL);
 }
+#else
+#error Neither Windows API nor nanosleep() seems to be available.
+#endif // ifdef HAVE_NANOSLEEP
 
 struct GUID
 {
