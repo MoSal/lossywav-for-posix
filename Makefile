@@ -31,38 +31,20 @@ OBJS = units/fftw_interface.o \
        units/nWav.o \
        lossyWAV.o
 
-COMMON_CXXFLAGS = -std=c++11 -O2 -pipe -Wall -Wextra
+COMMON_CXXFLAGS = -std=c++11 -O2 -pipe
 DEFINES = -DHAVE_STD_CHRONO_STEADY_CLOCK_NOW -DHAVE_SETPRIORITY -DHAVE_STAT -DHAVE_CHMOD -DHAVE_NANOSLEEP
-COMMON_LDFLAGS = -Wl,-O1 -Wl,--sort-common -Wl,--as-needed
-LTO_FLAGS := -flto
 
-OPTIMIZED_CXXFLAGS := -march=native -Ofast
 
 all: prep $(OBJS) link
-optimized: prep-optimized $(OBJS) link
-fftw: prep-fftw $(OBJS) link
-fftw-optimized: prep-fftw-optimized $(OBJS) link
 
 prep:
 	$(eval override CXXFLAGS = ${COMMON_CXXFLAGS} ${CXXFLAGS} ${DEFINES})
-	$(eval override LDFLAGS = ${COMMON_LDFLAGS} ${LDFLAGS})
-	$(eval override LIBS = ${COMMON_LIBS} ${LIBS})
-
-prep-optimized: prep
-	$(eval override CXXFLAGS += ${OPTIMIZED_CXXFLAGS} ${LTO_FLAGS})
-	$(eval override LDFLAGS += ${LTO_FLAGS})
-
-prep-fftw: prep
-	$(eval override CXXFLAGS += -DHAVE_FFTW3)
-	$(eval override LIBS += -lfftw3)
-
-prep-fftw-optimized: prep-optimized prep-fftw
 
 *.o: ${@:.o=.cpp} $(HEADERS)
 	${CXX:-g++} -c ${@:.o=.cpp} -o ${@} ${CXXFLAGS}
 
 link: $(OBJS)
-	${CXX} ${OBJS} -o lossywav ${LDFLAGS} ${LIBS}
+	${CXX} ${OBJS} -o lossywav ${LDFLAGS}
 
 clean:
 	-rm -f $(OBJS) lossywav
