@@ -222,7 +222,7 @@ struct tDS64Header
 
     uint32_t TableLength;
 
-    tChunkSize64 Table[];
+    tChunkSize64 Table[0];
 };
 
 
