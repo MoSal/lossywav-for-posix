@@ -94,15 +94,27 @@ def options(opt):
 #------------------------------------------------------------------------------
 
 @conf
+def check_func(conf, f_name, h_name, mandatory=True):
+    fragment = ''
+    if len(h_name) > 0:
+        fragment += '#include <' + h_name + '>\n'
+    fragment +='int main() { void(*p)(void) = (void(*)(void)) ' + f_name + '; return !p; }\n'
+
+    msg = 'Checking for ' + f_name + '()'
+    define_name = 'HAVE_' + f_name.upper().replace('::', '_')
+
+    conf.check_cxx(fragment=fragment, define_name=define_name,  mandatory=mandatory, msg=msg)
+
+@conf
 def check_api(conf):
     if conf.env['DEST_OS'] != 'win32':
         print('Checking API support:')
-        conf.check_cxx(function_name='std::chrono::steady_clock::now', header_name="chrono")
-        conf.check_cxx(function_name='setpriority', header_name="sys/resource.h")
-        conf.check_cxx(function_name='stat', header_name="sys/stat.h")
-        conf.check_cxx(function_name='chmod', header_name="sys/stat.h")
-        conf.check_cxx(function_name='nanosleep', header_name="ctime")
-        conf.check_cxx(function_name='sincos', header_name="math.h", mandatory=False)
+        check_func(conf, "std::chrono::steady_clock::now", "chrono")
+        check_func(conf, "setpriority", "sys/resource.h")
+        check_func(conf, "stat", "sys/stat.h")
+        check_func(conf, "chmod", "sys/stat.h")
+        check_func(conf, "nanosleep", "ctime")
+        check_func(conf, "sincos", "math.h", False)
 
 @conf
 def check_flags(conf):
